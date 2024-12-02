@@ -1,3 +1,21 @@
+// {
+//   "extends": "@react-native/typescript-config/tsconfig.json"
+// }
+
 {
-  "extends": "@react-native/typescript-config/tsconfig.json"
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "strict": true, // Bật chế độ kiểm tra nghiêm ngặt (nếu chưa có)
+    "baseUrl": "./", // Cơ sở để định vị file
+    "paths": {
+      "*": ["src/*"] // Giúp rút gọn đường dẫn import nếu cần
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types"] // Bao gồm các file kiểu tùy chỉnh
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/types/**/*.d.ts" // Đảm bảo TypeScript nhận các file khai báo kiểu tùy chỉnh
+  ],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "421815528895",
+    "project_id": "cnpmmusicapp",
+    "storage_bucket": "cnpmmusicapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:421815528895:android:6ae5c480d993ab0291c50a",
+        "android_client_info": {
+          "package_name": "com.cnpm_music_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTSi-NQ6fQ_X4PPsMI_Y985_HDMTE8Q7o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
