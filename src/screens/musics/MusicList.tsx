@@ -20,12 +20,12 @@ import { colors } from '../../constants/colors';
 import TextComponent from '../../components/TextComponent';
 import { sizes } from '../../constants/sizes';
 import { fontFamilies } from '../../constants/fontFamilies';
-import { getMusicList } from '../../utils/handleAPI';
 import Container from '../../components/Container';
 import auth from '@react-native-firebase/auth';
 import { Song } from '../../constants/models';
 import firestore from '@react-native-firebase/firestore';
 import { Section, Space } from '@bsdaoquang/rncomponent';
+import { getMusicListByKeyword } from '../../utils/handleAPI';
 const MusicList = ({ navigation }: any) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [displayedSongs, setDisplayedSongs] = useState<Song[]>([]);
@@ -36,7 +36,7 @@ const MusicList = ({ navigation }: any) => {
   useEffect(() => {
     const fetchSongs = async () => {
       setLoading(true);
-      const fetchedSongs = await getMusicList();
+      const fetchedSongs = await getMusicListByKeyword('music');
 
       if (fetchedSongs && Array.isArray(fetchedSongs)) {
         const validSongs = fetchedSongs.filter((song: Song) => song.videoUrl);

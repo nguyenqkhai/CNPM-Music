@@ -1,28 +1,39 @@
 export interface Top100 {
-    image: string;
-    name: string;
-    artists: string;
-    preview_url: string | null;
-  }
-  
+  id: string;
+  name: string;
+  artists: string;
+  videoUrl: string | null;
+  image: string;
+}
+
 export interface ChillList {
-    image: string;
-    name: string;
-    artists: string;
-    preview_url: string | null;
-  }
+  id: string;
+  name: string;
+  artists: string;
+  videoUrl: string | null;
+  image: string;
+}
 
 export interface VPopList {
-    image: string;
-    name: string;
-    artists: string;
-    preview_url: string | null;
-  }
+  id: string;
+  name: string;
+  artists: string;
+  videoUrl: string | null;
+  image: string;
+}
 
 export interface Song {
-    id: string;
-    name: string;
-    artists: string;
-    videoUrl: string | null;
-    image: string;
-  }
+  id: string;
+  name: string;
+  artists: string;
+  videoUrl: string | null;
+  image: string;
+}
+
+export interface RecommnededSong {
+  id: string;
+  name: string;
+  artists: string;
+  videoUrl: string | null;
+  image: string;
+}

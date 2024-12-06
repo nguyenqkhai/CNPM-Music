@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import HomeScreen from '../screens/home/HomeScreen';
+import HomeScreen from '../screens/home/HomeScreen';
 import TabNavigator from './TabNavigator';
 import SearchScreen from '../screens/search/SearchScreen';
 import MusicDetail from '../screens/musics/MusicDetail';
@@ -15,7 +15,7 @@ const MainNagivator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tab" component={TabNavigator} />
-      {/* <Stack.Screen name="Home" component={HomeScreen} /> */}
+      <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="MusicDetail" component={MusicDetail} />
       <Stack.Screen name="Favorite" component={Favorite} />

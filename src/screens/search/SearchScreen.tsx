@@ -1,6 +1,6 @@
 import { Input, Row, Section, Space } from '@bsdaoquang/rncomponent';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, TouchableOpacity } from 'react-native';
+import { FlatList, Image, Platform, TouchableOpacity, View } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../../constants/colors';
@@ -9,33 +9,85 @@ import { Song } from '../../constants/models';
 import { sizes } from '../../constants/sizes';
 import TextComponent from '../../components/TextComponent';
 import Container from '../../components/Container';
-import { searchMusic } from '../../utils/handleAPI';
+import { getMusicListByKeyword } from '../../utils/handleAPI';
 
 const SearchScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [suggestedSongs, setSuggestedSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch suggested songs for empty search
   const fetchSuggestedSongs = useCallback(async () => {
-    const items: Song[] = (await searchMusic('chill music') || []); // Replace with your own logic for fetching suggestions
-    setSuggestedSongs(items || []);
+    setLoading(true);
+    try {
+      const items: Song[] = (await getMusicListByKeyword('music')) || [];
+      setSuggestedSongs(items);
+    } catch (error) {
+      console.error('Error fetching suggested songs:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Fetch search results when query changes
-  const handleGetSearchSongs = useCallback(async (query: string) => {
-    const items: Song[] = (await searchMusic(query) || []);
-    setSearchResults(items || []);  // Ensure that null is handled properly
+  const fetchSearchResults = useCallback(async (query: string) => {
+    setLoading(true);
+    try {
+      const items: Song[] = (await getMusicListByKeyword(query)) || [];
+      setSearchResults(items);
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     if (searchQuery.trim()) {
-      handleGetSearchSongs(searchQuery);  // Only search if query is not empty
+      fetchSearchResults(searchQuery);
     } else {
       setSearchResults([]);
-      fetchSuggestedSongs();  // Fetch suggested songs when search query is empty
+      fetchSuggestedSongs();
     }
-  }, [searchQuery, handleGetSearchSongs, fetchSuggestedSongs]);
+  }, [searchQuery, fetchSearchResults, fetchSuggestedSongs]);
+
+  const renderSongItem = ({ item }: { item: Song }) => (
+    <TouchableOpacity
+      onPress={() => { navigation.navigate('MusicDetail', { song: item, playlist: suggestedSongs }) }}
+    >
+      <Row
+        justifyContent="space-between"
+        styles={{
+          paddingVertical: 12,
+          borderBottomColor: colors.grey,
+          borderBottomWidth: 0.5,
+        }}
+      >
+        <Row>
+          <Image
+            source={{ uri: item.image }}
+            width={50}
+            height={50}
+            style={{ width: 80, height: 80 }}
+          />
+          <Space width={12} />
+          <View>
+            <TextComponent
+              styles={{ maxWidth: 150 }}
+              color={colors.white}
+              text={item.name}
+            />
+            <TextComponent
+              styles={{ maxWidth: 150 }}
+              color={colors.grey}
+              text={item.artists}
+            />
+          </View>
+        </Row>
+        <AntDesign color={colors.white} name="playcircleo" size={24} />
+      </Row>
+    </TouchableOpacity>
+  );
+
 
   return (
     <Container isScroll={false} style={{ backgroundColor: colors.black }}>
@@ -46,7 +98,7 @@ const SearchScreen = ({ navigation }: any) => {
               style={{ marginBottom: 10 }}
               name="chevron-back"
               size={24}
-              color={colors.black}
+              color={colors.white}
             />
           </TouchableOpacity>
           <Input
@@ -64,7 +116,11 @@ const SearchScreen = ({ navigation }: any) => {
       </Section>
 
       <Section>
-        {searchResults.length > 0 ? (
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <TextComponent size={sizes.title} color={colors.white} text="Đang tải..." />
+          </View>
+        ) : searchResults.length > 0 ? (
           <>
             <TextComponent
               font={fontFamilies.semiBold}
@@ -74,31 +130,9 @@ const SearchScreen = ({ navigation }: any) => {
             />
             <Space height={20} />
             <FlatList
-              key={searchResults.length > 0 ? 'search' : 'suggested'}
               data={searchResults}
-              numColumns={2}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('SongDetails', {
-                      song: item,
-                    })
-                  }
-                  style={{ marginHorizontal: 6, marginVertical: 6 }}
-                >
-                  <Row>
-                    <Image
-                      source={{ uri: item.image }}
-                      width={50}
-                      height={50}
-                      style={{ width: 100, height: 100 }}
-                    />
-                    <TextComponent color={colors.white} text={item.name} />
-                    <TextComponent color={colors.grey} text={item.artists} />
-                  </Row>
-                </TouchableOpacity>
-              )}
+              renderItem={renderSongItem}
               initialNumToRender={8}
               removeClippedSubviews
             />
@@ -130,43 +164,9 @@ const SearchScreen = ({ navigation }: any) => {
             />
             <Space height={16} />
             <FlatList
-              style={{ marginBottom: 160 }}
               data={suggestedSongs}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('SongDetails', {
-                      song: item,
-                    })
-                  }
-                >
-                  <Row
-                    justifyContent="space-between"
-                    styles={{
-                      paddingVertical: 12,
-                      borderBottomColor: colors.grey,
-                      borderBottomWidth: 0.5,
-                    }}
-                  >
-                    <Row>
-                      <Image
-                        source={{ uri: item.image }}
-                        width={50}
-                        height={50}
-                        style={{ width: 150, height: 80 }}
-                      />
-                      <Space width={12} />
-                      <TextComponent
-                        styles={{ maxWidth: 150 }}
-                        color={colors.white}
-                        text={item.name}
-                      />
-                    </Row>
-                    <AntDesign color={colors.white} name="playcircleo" size={24} />
-                  </Row>
-                </TouchableOpacity>
-              )}
+              renderItem={renderSongItem}
               initialNumToRender={8}
               removeClippedSubviews
             />

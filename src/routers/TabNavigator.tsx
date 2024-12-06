@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-// import HomeScreen from '../screens/home/HomeScreen';
+import HomeScreen from '../screens/home/HomeScreen';
 import MusicList from '../screens/musics/MusicList';
 import Profile from '../screens/profiles/Profile';
 import { colors } from '../constants/colors';
@@ -51,7 +51,7 @@ const TabNavigator = () => {
       })}
     >
         <Tab.Screen name='LibaryTab' component={Libary}/>
-        {/* <Tab.Screen name='HomeTab' component={HomeScreen}/> */}
+        <Tab.Screen name='HomeTab' component={HomeScreen}/>
         <Tab.Screen name='MusicTab' component={MusicList}/>
         <Tab.Screen name='ProfileTab' component={Profile}/>
     </Tab.Navigator>

@@ -10,7 +10,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import Container from '../../components/Container';
-import { Section, Space, Text } from '@bsdaoquang/rncomponent';
+import { Section, Space } from '@bsdaoquang/rncomponent';
 import { colors } from '../../constants/colors';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import TextComponent from '../../components/TextComponent';
@@ -84,22 +84,18 @@ const MusicDetail = ({ route }: any) => {
       const songId = String(currentSong.id); // ID của bài hát
       const userfavoriteRef = firestore().collection('favorite').doc(userId);
 
-      // Lấy dữ liệu hiện tại
       const userfavoriteDoc = await userfavoriteRef.get();
       const favoriteData = userfavoriteDoc.exists ? userfavoriteDoc.data() : {};
 
-      // Kiểm tra bài hát có trong danh sách yêu thích hay không
       const isCurrentlyFavorite = favoriteData && favoriteData[songId];
 
       if (isCurrentlyFavorite) {
-        // Nếu bài hát đã yêu thích => Xóa
         await userfavoriteRef.update({
           [songId]: firestore.FieldValue.delete(),
         });
         setIsFavorite(false);
         Alert.alert('Thông báo', 'Bài hát đã được xóa khỏi danh sách yêu thích.');
       } else {
-        // Nếu bài hát chưa yêu thích => Thêm
         await userfavoriteRef.set(
           {
             [songId]: {
@@ -149,10 +145,10 @@ const MusicDetail = ({ route }: any) => {
 
   const dowload = async () => {
     try {
-      setIsDownloading(true); // Hiển thị trạng thái tải
-      const fileUrl = currentSong.videoUrl; // URL video
-      const fileName = `${currentSong.name}.mp4`; // Tên file
-      const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`; // Thư mục tải về
+      setIsDownloading(true);
+      const fileUrl = currentSong.videoUrl;
+      const fileName = `${currentSong.name}.mp4`;
+      const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
       const result = await RNFS.downloadFile({
         fromUrl: fileUrl,
@@ -170,7 +166,7 @@ const MusicDetail = ({ route }: any) => {
       console.error('Error downloading file:', error);
       console.log('Đã xảy ra lỗi khi tải về.');
     } finally {
-      setIsDownloading(false); // Ẩn trạng thái tải
+      setIsDownloading(false);
     }
   };
 
@@ -207,7 +203,7 @@ const MusicDetail = ({ route }: any) => {
       </TouchableWithoutFeedback>
       <Space height={20} />
       <Section>
-        <TextComponent text={currentSong.name} size={sizes.title} font={fontFamilies.semiBold} color={colors.white} />
+        <TextComponent text={currentSong.name} size={sizes.title} font={fontFamilies.bold} color={colors.white} />
       </Section>
 
       <Space height={30} />
@@ -237,9 +233,6 @@ const MusicDetail = ({ route }: any) => {
           <TextComponent text={isDownloading ? "Đang tải..." : "Tải về"} color={colors.white} />
         </TouchableOpacity>
 
-        <TouchableOpacity>
-
-        </TouchableOpacity>
       </Section>
 
     </Container>
