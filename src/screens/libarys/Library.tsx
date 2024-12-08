@@ -6,7 +6,6 @@ import {
   Image,
   FlatList,
   Animated,
-  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import TextComponent from '../../components/TextComponent';
@@ -22,6 +21,7 @@ const Library = ({ navigation }: any) => {
   const [recently, setRecently] = useState<any[]>([]);
   const [marqueeAnim] = useState(new Animated.Value(0));
   const [playlists, setPlaylists] = useState<any[]>([]);
+  const [favoriteCount, setFavoriteCount] = useState(0);
 
   const fetchRecently = () => {
     const userId = auth().currentUser?.uid;
@@ -37,6 +37,39 @@ const Library = ({ navigation }: any) => {
         });
       } catch (error) {
         console.log('Lỗi khi tải dữ liệu bài hát đã nghe gần đây: ', error);
+      }
+    }
+  };
+
+  const fetchFavorites = () => {
+    const userId = auth().currentUser?.uid;
+    if (userId) {
+      try {
+        const favoritesRef = firestore().collection('favorite').doc(userId);
+        favoritesRef.onSnapshot(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            const favoriteSongs = Object.values(data || []);
+            setFavoriteCount(favoriteSongs.length);
+          }
+        });
+      } catch (error) {
+        console.log('Lỗi khi tải danh sách yêu thích: ', error);
+      }
+    }
+  };
+
+  const deletePlaylist = async (playlistId: string) => {
+    const userId = auth().currentUser?.uid;
+    if (userId) {
+      try {
+        const playlistRef = firestore().collection('playlists').doc(userId);
+        await playlistRef.update({
+          [playlistId]: firestore.FieldValue.delete(),
+        });
+        console.log('Đã xóa playlist:', playlistId);
+      } catch (error) {
+        console.log('Lỗi khi xóa playlist:', error);
       }
     }
   };
@@ -75,6 +108,7 @@ const Library = ({ navigation }: any) => {
     fetchRecently();
     startMarquee();
     fetchPlaylists();
+    fetchFavorites();
   }, []);
 
   return (
@@ -92,7 +126,7 @@ const Library = ({ navigation }: any) => {
             onPress={() => navigation.navigate('Favorite')}>
             <Icon name="favorite" size={sizes.icon} color="dodgerblue" />
             <TextComponent text="Yêu thích" font={fontFamilies.regular} />
-            <TextComponent text="10" font={fontFamilies.bold} />
+            <TextComponent text={`${favoriteCount}`} font={fontFamilies.bold} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button}>
@@ -246,7 +280,7 @@ const Library = ({ navigation }: any) => {
                   size={16}
                 />
               </View>
-              <TouchableOpacity style={{ padding: 10 }}>
+              <TouchableOpacity style={{ padding: 10 }} onPress={() => { deletePlaylist(item.id) }}>
                 <Icon name="delete" size={24} color={colors.red} />
               </TouchableOpacity>
             </TouchableOpacity>

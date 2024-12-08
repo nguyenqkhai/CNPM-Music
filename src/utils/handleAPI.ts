@@ -1,5 +1,5 @@
 import axios from 'axios';
-export const API_KEY = 'AIzaSyAcxRCnVwccCV9oMsmJjM85UWLq2JUmOb0';
+export const API_KEY = 'AIzaSyC_dC4q_BA06LH6mPyqDrso8K5WRXS45H4';
 type YouTubeSearchItem = {
   id: {
     kind: string;

@@ -10,6 +10,7 @@ import { colors } from '../../constants/colors';
 import { fontFamilies } from '../../constants/fontFamilies';
 import axios from 'axios';
 import { RecommnededSong } from '../../constants/models';
+import auth from '@react-native-firebase/auth'
 
 const HomeScreen = ({ navigation }: any) => {
     const [categories, setCategories] = useState<{ [key: string]: Song[] }>({
@@ -25,12 +26,13 @@ const HomeScreen = ({ navigation }: any) => {
         fetchRecommendedSongs();
         fetchData();
     }, []);
+    const userIdd = auth().currentUser?.uid;
 
     const fetchRecommendedSongs = useCallback(async () => {
         try {
             setLoadingRecommended(true);
-            const response = await axios.post('http://192.168.1.7:5000/recommend_songs',
-                { userId: 'VtQmxmmtYMWUspXAQaRWNBSvTTD2' },
+            const response = await axios.post('http://192.168.2.8:5000/recommend_songs',
+                { userId: userIdd },
                 { headers: { 'Content-Type': 'application/json' } }
             );
             setRecommenSong(response.data);
@@ -103,7 +105,7 @@ const HomeScreen = ({ navigation }: any) => {
                     <TouchableOpacity
                         onPress={() => {
                             console.log(`Play song: ${item.name}`);
-                            navigation.navigate('MusicDetail', { song: item });
+                            navigation.navigate('MusicDetail', { song: item, playlist: recommenSong });
                         }}
                     >
                         <View
@@ -126,6 +128,7 @@ const HomeScreen = ({ navigation }: any) => {
             />
         </Section>
     );
+
 
     const renderCategory = (title: string, data: Song[], genre: string) => (
         <Section>
