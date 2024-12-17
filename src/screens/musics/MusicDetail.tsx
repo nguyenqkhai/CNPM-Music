@@ -103,6 +103,7 @@ const MusicDetail = ({ route }: any) => {
               artists: currentSong.artists || 'Unknown',
               image: currentSong.image,
               videoUrl: currentSong.videoUrl,
+              genres: currentSong.genres,
             },
           },
           { merge: true }

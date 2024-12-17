@@ -26,6 +26,7 @@ import { Song } from '../../constants/models';
 import firestore from '@react-native-firebase/firestore';
 import { Section, Space } from '@bsdaoquang/rncomponent';
 import { getMusicListByKeyword } from '../../utils/handleAPI';
+import Toast, { SuccessToast } from 'react-native-toast-message';
 const MusicList = ({ navigation }: any) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [displayedSongs, setDisplayedSongs] = useState<Song[]>([]);
@@ -36,7 +37,7 @@ const MusicList = ({ navigation }: any) => {
   useEffect(() => {
     const fetchSongs = async () => {
       setLoading(true);
-      const fetchedSongs = await getMusicListByKeyword('music');
+      const fetchedSongs = await getMusicListByKeyword('vietnamese pop');
 
       if (fetchedSongs && Array.isArray(fetchedSongs)) {
         const validSongs = fetchedSongs.filter((song: Song) => song.videoUrl);
@@ -48,7 +49,6 @@ const MusicList = ({ navigation }: any) => {
 
     fetchSongs();
   }, []);
-
 
   const loadMoreSongs = () => {
     if (loading) return;
@@ -95,10 +95,12 @@ const MusicList = ({ navigation }: any) => {
               artists: song.artists,
               image: song.image,
               videoUrl: song.videoUrl,
+              genres: song.genres
             },
           },
           { merge: true },
         );
+        console.log(song.genres);
         console.log('Đã thêm bài hát vào thư viện');
       }
     } catch (error) {
@@ -124,6 +126,7 @@ const MusicList = ({ navigation }: any) => {
             artists: song.artists,
             image: song.image,
             videoUrl: song.videoUrl,
+            genre: song.genres,
           },
         },
         { merge: true },

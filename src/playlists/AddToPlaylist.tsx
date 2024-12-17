@@ -62,7 +62,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
         return;
       }
 
-      const playlistId = playlist?.id; 
+      const playlistId = playlist?.id;
       if (!playlistId) {
         Alert.alert('Lỗi', 'Playlist không hợp lệ.');
         return;

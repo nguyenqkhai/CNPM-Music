@@ -168,7 +168,7 @@ const Library = ({ navigation }: any) => {
               }}>
               <TouchableOpacity onPress={() => {
                 navigation.navigate('MusicDetail', { song: item, playlist: recently })
-                console.log(item.id);
+                console.log(item);
               }
               }>
                 <View style={{ flexDirection: 'column', alignItems: 'center' }}>

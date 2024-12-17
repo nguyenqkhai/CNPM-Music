@@ -6,10 +6,15 @@ import {
   FlatList,
   ActivityIndicator,
   Animated,
+  StyleSheet,
 } from 'react-native';
-import { Menu, MenuOption, MenuOptions, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
+import {
+  Menu,
+  MenuOption,
+  MenuOptions,
+  MenuTrigger,
+} from 'react-native-popup-menu';
 import Icon from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { colors } from '../constants/colors';
 import TextComponent from '../components/TextComponent';
 import { sizes } from '../constants/sizes';
@@ -37,7 +42,7 @@ const PlaylistDetail = ({ route, navigation }: any) => {
   const loadMoreSongs = () => {
     if (loading) return;
     setLoading(true);
-    const newLoadCount = loadCount + 10;
+    const newLoadCount = Math.min(loadCount + 10, songs.length); // Không vượt quá số lượng bài hát
     setDisplayedSongs(songs.slice(0, newLoadCount));
     setLoadCount(newLoadCount);
     setLoading(false);
@@ -55,17 +60,7 @@ const PlaylistDetail = ({ route, navigation }: any) => {
       const userfavoriteRef = firestore().collection('favorite').doc(userId);
       const userfavoriteDoc = await userfavoriteRef.get();
 
-      let isFavorite = false;
-
-      if (userfavoriteDoc.exists) {
-        const favoriteData = userfavoriteDoc.data();
-        if (favoriteData && favoriteData[songId]) {
-          console.log('Bài hát đã tồn tại trong thư viện');
-          isFavorite = true;
-        }
-      }
-
-      if (isFavorite) {
+      if (userfavoriteDoc.exists && userfavoriteDoc.data()?.[songId]) {
         await userfavoriteRef.update({
           [songId]: firestore.FieldValue.delete(),
         });
@@ -81,7 +76,7 @@ const PlaylistDetail = ({ route, navigation }: any) => {
               videoUrl: song.videoUrl,
             },
           },
-          { merge: true },
+          { merge: true }
         );
         console.log('Đã thêm bài hát vào thư viện');
       }
@@ -93,46 +88,34 @@ const PlaylistDetail = ({ route, navigation }: any) => {
   const renderSong = ({ item }: { item: Song }) => (
     <Section>
       <TouchableOpacity
-        onPress={() => {
-          navigation.navigate('MusicDetail', { song: item, playlist: songs });
-        }}
+        onPress={() =>
+          navigation.navigate('MusicDetail', { song: item, playlist: songs })
+        }
         style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Image
           source={{ uri: item.image }}
-          style={{ width: 75, height: 75, borderRadius: 5, marginRight: 5 }}
+          style={styles.songImage}
         />
         <Section styles={{ flexDirection: 'column', justifyContent: 'center' }}>
           <Animated.Text
-            style={{
-              fontFamily: fontFamilies.semiBold,
-              width: 250,
-              fontSize: sizes.text,
-              overflow: 'hidden',
-            }}
+            style={styles.songName}
             numberOfLines={1}
             ellipsizeMode="tail">
             {item.name}
           </Animated.Text>
-
           <Animated.Text
-            style={{
-              fontFamily: fontFamilies.regular,
-              width: 250,
-              fontSize: sizes.desc,
-              overflow: 'hidden',
-            }}
+            style={styles.songArtist}
             numberOfLines={1}
             ellipsizeMode="tail">
             {item.artists}
           </Animated.Text>
         </Section>
-
         <Menu>
           <MenuTrigger>
             <Icon name="ellipsis-vertical" size={sizes.icon} color={colors.black} />
           </MenuTrigger>
           <MenuOptions>
-            <MenuOption onSelect={() => console.log('Thêm vào danh sách')}>
+            <MenuOption onSelect={() => console.log('Loại bỏ bài hát')}>
               <TextComponent text="Loại bỏ bài hát" />
             </MenuOption>
             <MenuOption onSelect={() => saveTofavorite(item)}>
@@ -145,40 +128,79 @@ const PlaylistDetail = ({ route, navigation }: any) => {
   );
 
   return (
-    <MenuProvider>
-      <Container style={{ backgroundColor: colors.white, flex: 1 }}>
-        {/* Header */}
-        <Section
-          styles={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 15,
-            backgroundColor: colors.instagram,
-          }}>
-
-          <TextComponent
-            text={playlist.name}
-            color={colors.black}
-            font={fontFamilies.bold}
-            size={30}
-          />
-        </Section>
-
-        {/* Danh sách bài hát */}
-        <Space height={10} />
-        <FlatList
-          data={displayedSongs}
-          renderItem={renderSong}
-          keyExtractor={item => item.id.toString()}
-          nestedScrollEnabled={true}
-          onEndReached={loadMoreSongs}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={loading ? <ActivityIndicator size="large" color={colors.black} /> : null}
+    <Container style={{ backgroundColor: colors.white, flex: 1 }} isScroll={false}>
+      {/* Header */}
+      <Section
+        styles={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 15,
+          backgroundColor: colors.instagram,
+        }}>
+        <TextComponent
+          text={playlist.name}
+          color={colors.black}
+          font={fontFamilies.bold}
+          size={30}
         />
-      </Container>
-    </MenuProvider>
+      </Section>
+
+      {/* Danh sách bài hát */}
+      <Space height={10} />
+      <FlatList
+        data={displayedSongs}
+        renderItem={renderSong}
+        keyExtractor={(item) => item.id.toString()}
+        onEndReached={loadMoreSongs}
+        onEndReachedThreshold={0.1}
+        ListFooterComponent={
+          loading ? <ActivityIndicator size="large" color={colors.black} /> : null
+        }
+      />
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Add', { playlist: playlist })}
+        style={styles.createButton}>
+        <TextComponent
+          text="Thêm bài hát vào danh sách"
+          size={16}
+          styles={styles.createButtonText}
+        />
+      </TouchableOpacity>
+    </Container>
   );
 };
+
+const styles = StyleSheet.create({
+  createButton: {
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+    backgroundColor: colors.blue,
+  },
+  createButtonText: {
+    color: colors.white,
+    fontFamily: fontFamilies.semiBold,
+  },
+  songImage: {
+    width: 75,
+    height: 75,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  songName: {
+    fontFamily: fontFamilies.semiBold,
+    width: 250,
+    fontSize: sizes.text,
+    overflow: 'hidden',
+  },
+  songArtist: {
+    fontFamily: fontFamilies.regular,
+    width: 250,
+    fontSize: sizes.desc,
+    overflow: 'hidden',
+  },
+});
 
 export default PlaylistDetail;

@@ -1,6 +1,6 @@
 import { Input, Row, Section, Space } from '@bsdaoquang/rncomponent';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, Platform, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, TouchableOpacity, View } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../../constants/colors';

@@ -4,7 +4,7 @@ import firestore from '@react-native-firebase/firestore';
 import { Song } from '../../constants/models';
 import Container from '../../components/Container';
 import TextComponent from '../../components/TextComponent';
-import { ActivityIndicator, FlatList, Image, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, TouchableOpacity } from 'react-native';
 import { sizes } from '../../constants/sizes';
 import { Section } from '@bsdaoquang/rncomponent';
 import { colors } from '../../constants/colors';
@@ -24,9 +24,8 @@ const Favorite = ({ navigation }: any) => {
 
         const userFavoriteRef = firestore().collection('favorite').doc(userId);
 
-        // Lắng nghe thay đổi từ Firestore (Realtime listener)
         const unsubscribe = userFavoriteRef.onSnapshot((userfavoriteDoc) => {
-            setLoading(true); // Hiển thị loading trong khi đang tải
+            setLoading(true); 
             if (userfavoriteDoc.exists) {
                 const favoriteData = userfavoriteDoc.data();
                 if (favoriteData) {
@@ -34,20 +33,18 @@ const Favorite = ({ navigation }: any) => {
                         id: key,
                         ...favoriteData[key]
                     }));
-                    setFavoriteSongs(songs); // Cập nhật danh sách bài hát yêu thích
+                    setFavoriteSongs(songs); 
                 }
             } else {
                 console.log("Thư viện rỗng");
-                setFavoriteSongs([]); // Trường hợp không có dữ liệu
+                setFavoriteSongs([]); 
             }
-            setLoading(false); // Ẩn loading khi đã có dữ liệu
+            setLoading(false); 
         });
 
-        // Cleanup listener khi component unmount
         return () => unsubscribe();
     }, []);
 
-    // Hàm xóa bài hát khỏi yêu thích
     const removeFromFavorites = async (songId: string) => {
         try {
             const userId = auth().currentUser?.uid;
@@ -58,7 +55,7 @@ const Favorite = ({ navigation }: any) => {
 
             const userFavoriteRef = firestore().collection('favorite').doc(userId);
             await userFavoriteRef.update({
-                [songId]: firestore.FieldValue.delete(), // Xóa bài hát khỏi danh sách yêu thích
+                [songId]: firestore.FieldValue.delete(), 
             });
             console.log('Bài hát đã được xóa khỏi thư viện yêu thích');
         } catch (error) {
@@ -68,7 +65,7 @@ const Favorite = ({ navigation }: any) => {
 
     const renderSong = ({ item }: { item: Song }) => (
         <Section>
-            <TouchableOpacity onPress={() => navigation.navigate('MusicDetail', { song: item, playlist: favoriteSongs })} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => { navigation.navigate('MusicDetail', { song: item, playlist: favoriteSongs }); console.log(item) }} style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Image
                     source={{ uri: item.image }}
                     style={{ width: 50, height: 50, borderRadius: 5, marginRight: 10 }}

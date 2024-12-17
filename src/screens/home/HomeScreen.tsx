@@ -23,33 +23,33 @@ const HomeScreen = ({ navigation }: any) => {
     const [recommenSong, setRecommenSong] = useState<RecommnededSong[]>([]);
 
     useEffect(() => {
-        fetchRecommendedSongs();
+        // fetchRecommendedSongs();
         fetchData();
     }, []);
     const userIdd = auth().currentUser?.uid;
 
-    const fetchRecommendedSongs = useCallback(async () => {
-        try {
-            setLoadingRecommended(true);
-            const response = await axios.post('http://192.168.2.8:5000/recommend_songs',
-                { userId: userIdd },
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-            setRecommenSong(response.data);
-            console.log(recommenSong);
-        } catch (error) {
-            console.error('Lỗi khi lấy bài hát gợi ý:', error);
-        } finally {
-            setLoadingRecommended(false);
-        }
-    }, []);
+    // const fetchRecommendedSongs = useCallback(async () => {
+    //     try {
+    //         setLoadingRecommended(true);
+    //         const response = await axios.post('http://192.168.2.8:5000/recommend_songs',
+    //             { userId: userIdd },
+    //             { headers: { 'Content-Type': 'application/json' } }
+    //         );
+    //         setRecommenSong(response.data);
+    //         console.log(recommenSong);
+    //     } catch (error) {
+    //         console.error('Lỗi khi lấy bài hát gợi ý:', error);
+    //     } finally {
+    //         setLoadingRecommended(false);
+    //     }
+    // }, []);
 
 
     const fetchData = useCallback(async () => {
         setLoadingCategories(true);
         try {
             const [fetchedTop100, fetchedVPop, fetchedKPop] = await Promise.all([
-                getMusicListByKeyword('ballad'),
+                getMusicListByKeyword('bolero mv'),
                 getMusicListByKeyword('vpop'),
                 getMusicListByKeyword('Kpop'),
             ]);
@@ -69,7 +69,6 @@ const HomeScreen = ({ navigation }: any) => {
     const renderSongItem = ({ item, playlist, genre }: { item: Song; playlist: Song[]; genre: string }) => (
         <TouchableOpacity
             onPress={() => {
-                console.log(item);
                 navigation.navigate('MusicDetail', { song: item, playlist });
                 console.log(item);
             }}
@@ -88,7 +87,6 @@ const HomeScreen = ({ navigation }: any) => {
                 <Image source={{ uri: item.image }} style={{ width: 200, height: 200 }} resizeMode="cover" />
                 <TextComponent text={item.name} size={15} numberOfLines={1} />
                 <TextComponent text={item.artists} styles={{ alignSelf: 'flex-start' }} size={15} font={fontFamilies.bold} />
-                <TextComponent text={genre} size={12} color={colors.grey} />
             </View>
         </TouchableOpacity>
     );
@@ -104,7 +102,7 @@ const HomeScreen = ({ navigation }: any) => {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         onPress={() => {
-                            console.log(`Play song: ${item.name}`);
+                            console.log(`Play song: ${item}`);
                             navigation.navigate('MusicDetail', { song: item, playlist: recommenSong });
                         }}
                     >
@@ -167,8 +165,8 @@ const HomeScreen = ({ navigation }: any) => {
                 </View>
             ) : (
                 <>
-                    {renderRecommendedSongs()}
-                    {renderCategory('Top 100', categories.top100, 'Pop Ballad')}
+                    {/* {renderRecommendedSongs()} */}
+                    {renderCategory('Bolero', categories.top100, 'Pop Ballad')}
                     {renderCategory('V-Pop', categories.vpop, 'V-Pop')}
                     {renderCategory('K-Pop', categories.kpop, 'K-Pop')}
                 </>

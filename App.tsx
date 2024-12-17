@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import {NavigationContainer} from '@react-navigation/native'
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { MenuProvider } from 'react-native-popup-menu'; // Thêm MenuProvider
 import AuthNavigator from './src/routers/AuthNavigator';
 import MainNavigator from './src/routers/MainNavigator';
 import Toast, {
   BaseToast,
   BaseToastProps,
-  ErrorToast
-} from 'react-native-toast-message'
-import auth from '@react-native-firebase/auth'
+  ErrorToast,
+} from 'react-native-toast-message';
+import auth from '@react-native-firebase/auth';
 
 const toastConfig = {
   success: (props: React.JSX.IntrinsicAttributes & BaseToastProps) => (
@@ -40,19 +41,21 @@ const toastConfig = {
 const App = () => {
   const [isLogin, setIsLogin] = useState(false);
 
-  useEffect(()=>{
-    auth().onAuthStateChanged(user => {
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(user => {
       setIsLogin(user ? (user?.uid ? true : false) : false);
     });
-  }, [])
-  return (
-    <>
-      <NavigationContainer>
-        {!isLogin ? <AuthNavigator/> : <MainNavigator/>}
-      </NavigationContainer>
-      <Toast config = {toastConfig}/>
-    </>
-  )
-}
+    return unsubscribe;
+  }, []);
 
-export default App
+  return (
+    <MenuProvider> 
+      <NavigationContainer>
+        {!isLogin ? <AuthNavigator /> : <MainNavigator />}
+      </NavigationContainer>
+      <Toast config={toastConfig} />
+    </MenuProvider>
+  );
+};
+
+export default App;
