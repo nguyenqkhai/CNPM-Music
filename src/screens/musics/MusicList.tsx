@@ -145,10 +145,13 @@ const MusicList = ({ navigation }: any) => {
           navigation.navigate('MusicDetail', { song: item, playlist: songs });
         }}
         style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image
-          source={{ uri: item.image }}
-          style={{ width: 75, height: 75, borderRadius: 5, marginRight: 5 }}
-        />
+        <View style={{ width: 90, position: 'relative', overflow: 'hidden', borderRadius: 4 }}>
+          <Image
+            source={{ uri: item.image }}
+            resizeMode='cover'
+            style={{ width: 145, height: 80, borderRadius: 5, marginRight: 5 }}
+          />
+        </View>
         <Section
           styles={{
             flexDirection: 'column',
@@ -187,11 +190,11 @@ const MusicList = ({ navigation }: any) => {
               color={colors.black}
             />
           </MenuTrigger>
-          <MenuOptions>
-            <MenuOption onSelect={() => navigation.navigate()}>
+          <MenuOptions >
+            <MenuOption style={{ padding: 8, borderBottomColor: colors.black2, borderBottomWidth: 1 }} onSelect={() => navigation.navigate()}>
               <TextComponent text="Thêm vào danh sách" />
             </MenuOption>
-            <MenuOption onSelect={() => { saveTofavorite(item); console.log(item) }}>
+            <MenuOption style={{ padding: 8 }} onSelect={() => { saveTofavorite(item); console.log(item) }}>
               <TextComponent text="Yêu thích bài hát" />
             </MenuOption>
           </MenuOptions>
@@ -225,7 +228,7 @@ const MusicList = ({ navigation }: any) => {
 
           <TextComponent
             text="Danh sách nhạc"
-            color={colors.black}
+            color={colors.white}
             font={fontFamilies.bold}
             size={sizes.title}
           />

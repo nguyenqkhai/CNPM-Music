@@ -1,6 +1,6 @@
 import { Input, Row, Section, Space } from '@bsdaoquang/rncomponent';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, TouchableOpacity, View } from 'react-native';
+import { Animated, FlatList, Image, TouchableOpacity, View } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../../constants/colors';
@@ -58,7 +58,7 @@ const SearchScreen = ({ navigation }: any) => {
         justifyContent="space-between"
         styles={{
           paddingVertical: 12,
-          borderBottomColor: colors.grey,
+          borderBottomColor: colors.black,
           borderBottomWidth: 0.5,
         }}
       >
@@ -71,26 +71,38 @@ const SearchScreen = ({ navigation }: any) => {
           />
           <Space width={12} />
           <View>
-            <TextComponent
-              styles={{ maxWidth: 150 }}
-              color={colors.white}
-              text={item.name}
-            />
-            <TextComponent
-              styles={{ maxWidth: 150 }}
-              color={colors.grey}
-              text={item.artists}
-            />
+            <Animated.Text
+              style={{
+                fontFamily: fontFamilies.semiBold,
+                width: 250,
+                fontSize: sizes.text,
+                overflow: 'hidden',
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {item.name}
+            </Animated.Text>
+            <Animated.Text
+              style={{
+                fontFamily: fontFamilies.regular,
+                width: 250,
+                fontSize: sizes.desc,
+                overflow: 'hidden',
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {item.artists}
+            </Animated.Text>
           </View>
         </Row>
-        <AntDesign color={colors.white} name="playcircleo" size={24} />
+        <AntDesign color={colors.black} name="playcircleo" size={24} />
       </Row>
     </TouchableOpacity>
   );
 
 
   return (
-    <Container isScroll={false} style={{ backgroundColor: colors.black }}>
+    <Container isScroll={false} style={{ backgroundColor: colors.white }}>
       <Section styles={{ marginTop: 45 }}>
         <Row alignItems="center" justifyContent="space-between">
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -98,18 +110,18 @@ const SearchScreen = ({ navigation }: any) => {
               style={{ marginBottom: 10 }}
               name="chevron-back"
               size={24}
-              color={colors.white}
+              color={colors.black}
             />
           </TouchableOpacity>
           <Input
-            prefix={<AntDesign name="search1" size={sizes.title} color={colors.white} />}
+            prefix={<AntDesign name="search1" size={sizes.title} color={colors.black} />}
             clear
-            inputStyles={{ color: colors.white }}
-            color={colors.black2}
-            styles={{ width: 300, paddingVertical: 4 }}
+            inputStyles={{ color: colors.black }}
+            color={colors.white}
+            styles={{ width: 350, paddingVertical: 4 }}
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholderColor={colors.white}
+            placeholderColor={colors.black}
             placeholder="Tên bài hát, nghệ sĩ, album"
           />
         </Row>
@@ -118,22 +130,23 @@ const SearchScreen = ({ navigation }: any) => {
       <Section>
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <TextComponent size={sizes.title} color={colors.white} text="Đang tải..." />
+            <TextComponent size={sizes.title} color={colors.black} text="Đang tải..." />
           </View>
         ) : searchResults.length > 0 ? (
           <>
             <TextComponent
               font={fontFamilies.semiBold}
               size={sizes.bigTitle}
-              color={colors.white}
+              color={colors.black}
               text="Kết quả tìm kiếm"
             />
             <Space height={20} />
             <FlatList
+              showsVerticalScrollIndicator={false}
+              style={{ marginBottom: 200 }}
               data={searchResults}
               keyExtractor={(item) => item.id}
               renderItem={renderSongItem}
-              initialNumToRender={8}
               removeClippedSubviews
             />
           </>
@@ -149,7 +162,7 @@ const SearchScreen = ({ navigation }: any) => {
               <Space height={12} />
               <TextComponent
                 size={sizes.bigTitle}
-                color={colors.white}
+                color={colors.black}
                 text="Không tìm thấy kết quả"
               />
             </Row>
@@ -159,11 +172,13 @@ const SearchScreen = ({ navigation }: any) => {
             <TextComponent
               font={fontFamilies.semiBold}
               size={sizes.bigTitle}
-              color={colors.white}
+              color={colors.black}
               text="Gợi ý tìm kiếm"
             />
             <Space height={16} />
             <FlatList
+              showsVerticalScrollIndicator={false}
+              style={{ marginBottom: 200 }}
               data={suggestedSongs}
               keyExtractor={(item) => item.id}
               renderItem={renderSongItem}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Image, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, FlatList, Image, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import firestore from '@react-native-firebase/firestore';
@@ -20,6 +20,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
   const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [suggestedSongs, setSuggestedSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);
+  const [playlistData, setPlaylistData] = useState<Song[]>([]);
 
   const fetchSuggestedSongs = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,30 @@ const AddToPlaylist = ({ route, navigation }: any) => {
     }
   }, [searchQuery, fetchSearchResults, fetchSuggestedSongs]);
 
+  useEffect(() => {
+    const userId = auth().currentUser?.uid;
+    const playlistId = playlist?.id;
+
+    if (!userId || !playlistId) return;
+
+    const playlistRef = firestore().collection('playlists').doc(userId);
+
+    const unsubscribe = playlistRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && data[playlistId]) {
+          const songs = data[playlistId]?.songs || [];
+          setPlaylistData(songs);
+        }
+      } else {
+        console.warn('Document does not exist');
+        setPlaylistData([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [playlist]);
+
   const addToPlaylist = async (song: Song) => {
     try {
       const userId = auth().currentUser?.uid;
@@ -62,15 +87,14 @@ const AddToPlaylist = ({ route, navigation }: any) => {
         return;
       }
 
-      const playlistId = playlist?.id;
+      const playlistId = playlist.id;
+      console.log(playlist?.id);
       if (!playlistId) {
         Alert.alert('Lỗi', 'Playlist không hợp lệ.');
         return;
       }
 
       const playlistRef = firestore().collection('playlists').doc(userId);
-
-      // Lấy dữ liệu của playlist từ Firestore
       const userPlaylistsDoc = await playlistRef.get();
       const userPlaylists = userPlaylistsDoc.data();
 
@@ -79,8 +103,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
         return;
       }
 
-      const existingSongs = userPlaylists[playlistId].songs || [];
-
+      const existingSongs = userPlaylists[playlistId]?.songs || [];
       const isSongExist = existingSongs.some((s: Song) => s.id === song.id);
       if (isSongExist) {
         Toast.show({
@@ -123,34 +146,47 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       justifyContent="space-between"
       styles={{
         paddingVertical: 12,
-        borderBottomColor: colors.grey,
+        borderBottomColor: colors.black,
         borderBottomWidth: 0.5,
       }}
     >
-      <Row>
-        <Image source={{ uri: item.image }} style={{ width: 80, height: 80 }} />
+      <Row >
+        <Image source={{ uri: item.image }} style={{ width: 100, height: 80, borderRadius: 4 }} />
         <Space width={12} />
         <View>
-          <TextComponent
-            styles={{ maxWidth: 150 }}
-            color={colors.white}
-            text={item.name}
-          />
-          <TextComponent
-            styles={{ maxWidth: 150 }}
-            color={colors.grey}
-            text={item.artists}
-          />
+          <Animated.Text
+            style={{
+              fontFamily: fontFamilies.semiBold,
+              width: 250,
+              maxWidth: 230,
+              fontSize: sizes.text,
+              overflow: 'hidden',
+            }}
+            numberOfLines={2}
+            ellipsizeMode="tail">
+            {item.name}
+          </Animated.Text>
+          <Animated.Text
+            style={{
+              fontFamily: fontFamilies.regular,
+              width: 250,
+              fontSize: sizes.desc,
+              overflow: 'hidden',
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.artists}
+          </Animated.Text>
         </View>
+        <TouchableOpacity onPress={() => addToPlaylist(item)}>
+          <Ionicons style={{ marginRight: 12, paddingRight: 8 }} color={colors.black} name="add" size={24} />
+        </TouchableOpacity>
       </Row>
-      <TouchableOpacity onPress={() => addToPlaylist(item)}>
-        <Ionicons color={colors.white} name="add" size={24} />
-      </TouchableOpacity>
     </Row>
   );
 
   return (
-    <Container isScroll={false} style={{ backgroundColor: colors.black }}>
+    <Container isScroll={false} style={{ backgroundColor: colors.white }}>
       <Section styles={{ marginTop: 45 }}>
         <Row alignItems="center" justifyContent="space-between">
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -158,18 +194,18 @@ const AddToPlaylist = ({ route, navigation }: any) => {
               style={{ marginBottom: 10 }}
               name="chevron-back"
               size={24}
-              color={colors.white}
+              color={colors.black}
             />
           </TouchableOpacity>
           <Input
-            prefix={<AntDesign name="search1" size={sizes.title} color={colors.white} />}
+            prefix={<AntDesign name="search1" size={sizes.title} color={colors.black} />}
             clear
-            inputStyles={{ color: colors.white }}
-            color={colors.black2}
-            styles={{ width: 300, paddingVertical: 4 }}
+            inputStyles={{ color: colors.black }}
+            color={colors.white}
+            styles={{ width: 350, paddingVertical: 4 }}
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholderColor={colors.white}
+            placeholderColor={colors.black}
             placeholder="Tên bài hát, nghệ sĩ, album"
           />
         </Row>
@@ -178,60 +214,40 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       <Section>
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <TextComponent size={sizes.title} color={colors.white} text="Đang tải..." />
+            <TextComponent size={sizes.title} color={colors.black} text="Đang tải..." />
           </View>
         ) : searchResults.length > 0 ? (
           <>
             <TextComponent
               font={fontFamilies.semiBold}
               size={sizes.bigTitle}
-              color={colors.white}
+              color={colors.black}
               text="Kết quả tìm kiếm"
             />
             <Space height={20} />
             <FlatList
+              showsVerticalScrollIndicator={false}
+              style={{ marginBottom: 200 }}
               data={searchResults}
               keyExtractor={(item) => item.id}
               renderItem={renderSongItem}
-              initialNumToRender={8}
-              removeClippedSubviews
-              getItemLayout={(data, index) => ({
-                length: 100,
-                offset: 100 * index,
-                index,
-              })}
             />
           </>
-        ) : searchQuery.trim() && searchResults.length === 0 ? (
-          <Section>
-            <Row alignItems="center" styles={{ flexDirection: 'column', marginTop: 20 }}>
-              <TextComponent
-                size={sizes.bigTitle}
-                color={colors.white}
-                text="Không tìm thấy kết quả"
-              />
-            </Row>
-          </Section>
         ) : (
           <>
             <TextComponent
               font={fontFamilies.semiBold}
               size={sizes.bigTitle}
-              color={colors.white}
+              color={colors.black}
               text="Gợi ý tìm kiếm"
             />
             <Space height={16} />
             <FlatList
+              showsVerticalScrollIndicator={false}
+              style={{ marginBottom: 200 }}
               data={suggestedSongs}
               keyExtractor={(item) => item.id}
               renderItem={renderSongItem}
-              initialNumToRender={8}
-              removeClippedSubviews
-              getItemLayout={(data, index) => ({
-                length: 100,
-                offset: 100 * index,
-                index,
-              })}
             />
           </>
         )}

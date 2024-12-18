@@ -117,40 +117,41 @@ const Library = ({ navigation }: any) => {
         flex: 1,
         backgroundColor: colors.white,
       }}>
-      <Section>
+      <Section styles={{ paddingTop: 20, borderBottomWidth: 1, borderBottomColor: colors.black2, paddingBottom: 36 }}>
         <TextComponent text="Thư viện" font={fontFamilies.bold} size={28} />
         <Space height={20} />
         <Row justifyContent="space-around">
           <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate('Favorite')}>
-            <Icon name="favorite" size={sizes.icon} color="dodgerblue" />
-            <TextComponent text="Yêu thích" font={fontFamilies.regular} />
-            <TextComponent text={`${favoriteCount}`} font={fontFamilies.bold} />
+            <Icon name="favorite" size={30} color="dodgerblue" />
+            <TextComponent size={18} text="Yêu thích" font={fontFamilies.regular} />
+            <TextComponent size={18} text={`${favoriteCount}`} font={fontFamilies.bold} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button}>
-            <Icon name="file-download" size={sizes.icon} color="purple" />
-            <TextComponent text="Tải về" font={fontFamilies.regular} />
-            <TextComponent text="10" font={fontFamilies.bold} />
+            <Icon name="file-download" size={30} color="purple" />
+            <TextComponent size={18} text="Tải về" font={fontFamilies.regular} />
+            <TextComponent size={18} text="10" font={fontFamilies.bold} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button}>
-            <Icon name="cloud-upload" size={sizes.icon} color="orange" />
-            <TextComponent text="Tải lên" font={fontFamilies.regular} />
-            <TextComponent text="10" font={fontFamilies.bold} />
+            <Icon name="cloud-upload" size={30} color="orange" />
+            <TextComponent size={18} text="Tải lên" font={fontFamilies.regular} />
+            <TextComponent size={18} text="10" font={fontFamilies.bold} />
           </TouchableOpacity>
         </Row>
       </Section>
 
       <Space height={20} />
 
-      <Section>
+      <Section styles={{ borderBottomColor: colors.black2, borderBottomWidth: 1, paddingBottom: 36 }}>
         <TextComponent
           text="Nghe gần đây >"
-          font={fontFamilies.semiBold}
-          size={20}
+          font={fontFamilies.bold}
+          size={28}
         />
+        <Space height={12} />
         <FlatList
           data={recently}
           horizontal
@@ -171,18 +172,23 @@ const Library = ({ navigation }: any) => {
                 console.log(item);
               }
               }>
-                <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'column', alignItems: 'center', width: 230 }}>
                   <Image
                     source={{ uri: item.image }}
-                    style={{ width: 200, height: 200 }}
+                    style={{ width: 356, height: 200 }}
                   />
                   <Animated.Text
                     style={{
                       fontFamily: fontFamilies.semiBold,
                       width: 200,
+                      paddingHorizontal: 12,
+                      paddingTop: 12,
+                      paddingBottom: 8,
                       overflow: 'hidden',
+                      textAlign: 'center',
+                      fontSize: 18,
                     }}
-                    numberOfLines={1}
+                    numberOfLines={2}
                     ellipsizeMode="tail">
                     {item.name}
                   </Animated.Text>
@@ -191,7 +197,11 @@ const Library = ({ navigation }: any) => {
                     style={{
                       fontFamily: fontFamilies.semiBold,
                       width: 200,
+                      paddingHorizontal: 12,
+                      paddingBottom: 8,
+                      fontSize: 18,
                       overflow: 'hidden',
+                      textAlign: 'center'
                     }}
                     numberOfLines={1}
                     ellipsizeMode="tail">
@@ -204,8 +214,8 @@ const Library = ({ navigation }: any) => {
         />
       </Section>
 
-      <Section>
-        <TextComponent text="Playlist" font={fontFamilies.semiBold} size={20} />
+      <Section styles={{ paddingTop: 20 }}>
+        <TextComponent text="Playlist" font={fontFamilies.bold} size={28} />
         <TouchableOpacity
           onPress={() => navigation.navigate('Create')}
           style={{
@@ -228,8 +238,10 @@ const Library = ({ navigation }: any) => {
             }}>
             <Icon name="add" size={50} color="grey" />
           </View>
+          <Space width={10} />
           <View>
             <TextComponent
+              size={20}
               text="Tạo mới playlist"
               font={fontFamilies.semiBold}
             />
@@ -242,7 +254,7 @@ const Library = ({ navigation }: any) => {
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => { navigation.navigate('PlaylistDetail', { playlist: item }) }}
+              onPress={() => { navigation.navigate('PlaylistDetail', { playlist: item }); console.log(item.id) }}
               style={{ flexDirection: 'row', padding: 10, alignItems: 'center' }}>
               <View
                 style={{
@@ -267,7 +279,9 @@ const Library = ({ navigation }: any) => {
                     }}
                   />
                 )}
+                {/* <Image source={{uri:}}/> */}
               </View>
+              <Space width={10} />
               <View style={{ flex: 1 }}>
                 <TextComponent
                   text={item.name}
@@ -277,11 +291,11 @@ const Library = ({ navigation }: any) => {
                 <TextComponent
                   text={`${item.auther}`}
                   font={fontFamilies.regular}
-                  size={16}
+                  size={18}
                 />
               </View>
               <TouchableOpacity style={{ padding: 10 }} onPress={() => { deletePlaylist(item.id) }}>
-                <Icon name="delete" size={24} color={colors.red} />
+                <Icon name="delete" size={30} color={colors.red} />
               </TouchableOpacity>
             </TouchableOpacity>
           )}

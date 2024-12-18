@@ -5,48 +5,28 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Animated,
   StyleSheet,
 } from 'react-native';
-import {
-  Menu,
-  MenuOption,
-  MenuOptions,
-  MenuTrigger,
-} from 'react-native-popup-menu';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors } from '../constants/colors';
 import TextComponent from '../components/TextComponent';
-import { sizes } from '../constants/sizes';
 import { fontFamilies } from '../constants/fontFamilies';
 import Container from '../components/Container';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Song } from '../constants/models';
+import GridImage from '../playlists/GridImage';
 import { Section, Space } from '@bsdaoquang/rncomponent';
+import Octicons from 'react-native-vector-icons/Octicons'
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const PlaylistDetail = ({ route, navigation }: any) => {
   const { playlist } = route.params;
+
   const [songs, setSongs] = useState<Song[]>(playlist.songs || []);
   const [loading, setLoading] = useState(false);
-  const [displayedSongs, setDisplayedSongs] = useState<Song[]>([]);
-  const [loadCount, setLoadCount] = useState(10);
-  const [marqueeAnim] = useState(new Animated.Value(0));
 
-  useEffect(() => {
-    if (songs.length > 0) {
-      setDisplayedSongs(songs.slice(0, loadCount));
-    }
-  }, [songs, loadCount]);
-
-  const loadMoreSongs = () => {
-    if (loading) return;
-    setLoading(true);
-    const newLoadCount = Math.min(loadCount + 10, songs.length); // Không vượt quá số lượng bài hát
-    setDisplayedSongs(songs.slice(0, newLoadCount));
-    setLoadCount(newLoadCount);
-    setLoading(false);
-  };
+  const user = auth().currentUser;
 
   const saveTofavorite = async (song: Song) => {
     try {
@@ -76,7 +56,7 @@ const PlaylistDetail = ({ route, navigation }: any) => {
               videoUrl: song.videoUrl,
             },
           },
-          { merge: true }
+          { merge: true },
         );
         console.log('Đã thêm bài hát vào thư viện');
       }
@@ -84,123 +64,107 @@ const PlaylistDetail = ({ route, navigation }: any) => {
       console.log('Lỗi khi lưu bài hát:', error);
     }
   };
-
   const renderSong = ({ item }: { item: Song }) => (
-    <Section>
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('MusicDetail', { song: item, playlist: songs })
-        }
-        style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image
-          source={{ uri: item.image }}
-          style={styles.songImage}
-        />
-        <Section styles={{ flexDirection: 'column', justifyContent: 'center' }}>
-          <Animated.Text
-            style={styles.songName}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.name}
-          </Animated.Text>
-          <Animated.Text
-            style={styles.songArtist}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.artists}
-          </Animated.Text>
-        </Section>
-        <Menu>
-          <MenuTrigger>
-            <Icon name="ellipsis-vertical" size={sizes.icon} color={colors.black} />
-          </MenuTrigger>
-          <MenuOptions>
-            <MenuOption onSelect={() => console.log('Loại bỏ bài hát')}>
-              <TextComponent text="Loại bỏ bài hát" />
-            </MenuOption>
-            <MenuOption onSelect={() => saveTofavorite(item)}>
-              <TextComponent text="Yêu thích bài hát" />
-            </MenuOption>
-          </MenuOptions>
-        </Menu>
+    <TouchableOpacity style={styles.songItem} onPress={() => { navigation.navigate('MusicDetail', { song: item, playlist: songs }) }}>
+      <View style={{ width: 130 }}>
+        <Image source={{ uri: item.image }} style={styles.songImage} />
+      </View>
+      <Space width={16} />
+      <View style={styles.songInfo}>
+        <TextComponent text={item.name} numberOfLines={2} styles={[styles.songName, { maxWidth: 180 }]} />
+        <TextComponent text={item.artists} styles={styles.songArtist} />
+      </View>
+      <TouchableOpacity onPress={() => saveTofavorite(item)}>
+        <Icon name="heart" size={24} color={colors.grey} />
       </TouchableOpacity>
-    </Section>
+    </TouchableOpacity>
   );
 
   return (
-    <Container style={{ backgroundColor: colors.white, flex: 1 }} isScroll={false}>
+    <Container style={styles.container} isScroll={false}>
       {/* Header */}
-      <Section
-        styles={{
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 15,
-          backgroundColor: colors.instagram,
-        }}>
-        <TextComponent
-          text={playlist.name}
-          color={colors.black}
-          font={fontFamilies.bold}
-          size={30}
-        />
-      </Section>
+      <View style={[styles.header, { borderBottomColor: colors.black2, borderBottomWidth: 1, marginBottom: 12 }]}>
+        <GridImage images={songs.map((song: Song) => song.image)} />
+        <View style={styles.playlistInfo}>
+          <TextComponent size={20} text={playlist.name} numberOfLines={2} styles={styles.playlistName} />
+          <TextComponent size={18} text={`${user?.displayName}`} />
+          <TextComponent size={18} text={`${songs.length} bài hát`} />
+        </View>
+        <Section
+          styles={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity style={{ alignItems: 'center' }}>
+            <Octicons name='download' size={30} color={colors.black} />
+            <TextComponent text='Tải xuống' />
+          </TouchableOpacity>
+          <Space width={30} />
+          <TouchableOpacity style={styles.shuffleButton}>
+            <TextComponent text="PHÁT PLAYLIST" styles={styles.shuffleText} />
+          </TouchableOpacity>
+          <Space width={30} />
+          <TouchableOpacity style={{ alignItems: 'center' }} onPress={() => { navigation.navigate('Add', { playlist: playlist }) }}>
+            <Ionicons name='add-circle-outline' size={30} color={colors.black} />
+            <TextComponent text="Thêm" />
+          </TouchableOpacity>
+        </Section>
+      </View>
 
       {/* Danh sách bài hát */}
-      <Space height={10} />
       <FlatList
-        data={displayedSongs}
+        data={songs}
         renderItem={renderSong}
-        keyExtractor={(item) => item.id.toString()}
-        onEndReached={loadMoreSongs}
+        keyExtractor={item => item.id.toString()}
         onEndReachedThreshold={0.1}
         ListFooterComponent={
-          loading ? <ActivityIndicator size="large" color={colors.black} /> : null
+          loading ? (
+            <ActivityIndicator size="large" color={colors.black} />
+          ) : null
         }
       />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Add', { playlist: playlist })}
-        style={styles.createButton}>
-        <TextComponent
-          text="Thêm bài hát vào danh sách"
-          size={16}
-          styles={styles.createButtonText}
-        />
-      </TouchableOpacity>
     </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  createButton: {
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginTop: 20,
-    alignItems: 'center',
-    backgroundColor: colors.blue,
+  container: { flex: 1, backgroundColor: colors.white },
+  header: { alignItems: 'center', padding: 20, paddingBottom: 2 },
+  playlistImage: { width: 200, height: 200, borderRadius: 10 },
+  playlistInfo: { alignItems: 'center', marginVertical: 10 },
+  playlistName: {
+    fontSize: 28,
+    fontFamily: fontFamilies.bold,
+    color: colors.black,
   },
-  createButtonText: {
+  playlistDetails: { fontSize: 14, color: colors.black },
+  shuffleButton: {
+    backgroundColor: colors.instagram,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 50,
+    marginTop: 10,
+    top: -8,
+    left: -5
+  },
+  shuffleText: {
     color: colors.white,
-    fontFamily: fontFamilies.semiBold,
+    fontSize: 16,
+    fontFamily: fontFamilies.bold,
   },
-  songImage: {
-    width: 75,
-    height: 75,
-    borderRadius: 5,
-    marginRight: 5,
+  songItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+    // width: 100,
   },
-  songName: {
-    fontFamily: fontFamilies.semiBold,
-    width: 250,
-    fontSize: sizes.text,
-    overflow: 'hidden',
-  },
-  songArtist: {
-    fontFamily: fontFamilies.regular,
-    width: 250,
-    fontSize: sizes.desc,
-    overflow: 'hidden',
-  },
+  songImage: { width: 145, height: 80, borderRadius: 4 },
+  songInfo: { flex: 1, marginLeft: 10 },
+  songName: { fontSize: 16, fontFamily: fontFamilies.semiBold },
+  songArtist: { fontSize: 14, color: colors.black },
 });
 
 export default PlaylistDetail;

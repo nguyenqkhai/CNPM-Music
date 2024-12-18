@@ -6,11 +6,12 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   Alert,
+  Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import Container from '../../components/Container';
-import { Section, Space } from '@bsdaoquang/rncomponent';
+import { Row, Section, Space, Text } from '@bsdaoquang/rncomponent';
 import { colors } from '../../constants/colors';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import TextComponent from '../../components/TextComponent';
@@ -18,9 +19,15 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { sizes } from '../../constants/sizes';
 import { fontFamilies } from '../../constants/fontFamilies';
 import Octicons from 'react-native-vector-icons/Octicons'
+import Entypo from 'react-native-vector-icons/Entypo'
 import RNFS from 'react-native-fs'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
+import { Reviews } from 'constants/models';
+import Toast from 'react-native-toast-message';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
+import { parseTime } from '../../utils/helper';
+import Input from '../../components/InputComponent';
 
 const MusicDetail = ({ route }: any) => {
   const { playlist, song } = route.params;
@@ -33,7 +40,15 @@ const MusicDetail = ({ route }: any) => {
   const playerRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [reviews, setReviews] = useState<Reviews[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [loadingComments, setLoadingComments] = useState(true);
   const { width } = Dimensions.get('window');
+
+  const user = auth().currentUser
+  const musicName = currentSong?.name
 
   useEffect(() => {
     if (currentIndex >= 0 && playlist[currentIndex]) {
@@ -46,6 +61,82 @@ const MusicDetail = ({ route }: any) => {
       resetHideControlsTimer();
     }
   }, [showControls]);
+
+  useEffect(() => {
+    handleGetComments()
+  }, [])
+
+  const handleGetComments = () => {
+    firestore()
+      .collection('reviews')
+      .where('name', '==', musicName)
+      .onSnapshot((snapshot: any) => {
+        const items = snapshot.docs.map((doc: any) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setReviews(items);
+      });
+  };
+
+  const handlePostComments = async () => {
+    if (!newComment) {
+      Toast.show({
+        type: 'error',
+        text1: 'Thông báo',
+        text2: 'Vui lòng nhập bình luận của bạn',
+      });
+      return;
+    }
+
+    const commentData = {
+      user: user?.displayName,
+      userComments: newComment,
+      userId: user?.uid,
+      photoUrl: user?.photoURL ?? '',
+      timestamp: new Date(),
+    };
+
+    if (reviews.length > 0) {
+      await firestore()
+        .doc(`reviews/${reviews[0].id}`)
+        .update({
+          comments: firestore.FieldValue.arrayUnion(commentData),
+        });
+    } else {
+      await firestore()
+        .collection('reviews')
+        .add({
+          name: musicName,
+          comments: [commentData],
+        });
+    }
+    setNewComment('');
+  };
+
+  const handleDeleteComment = async (index: number, reviews: Reviews) => {
+    try {
+      await firestore()
+        .collection('reviews')
+        .doc(reviews.id)
+        .update({
+          comments: firestore.FieldValue.arrayRemove(reviews.comments[index]),
+        });
+      Toast.show({
+        type: 'success',
+        text1: 'Thông báo',
+        text2: 'Xóa bình luận thành công',
+      });
+    } catch (error) {
+      console.log(error);
+      Toast.show({
+        type: 'error',
+        text1: 'Thông báo',
+        text2: 'Xóa bình luận thất bại',
+      });
+    }
+  };
+
 
   const resetHideControlsTimer = () => {
     if (timeoutRef.current) {
@@ -117,7 +208,6 @@ const MusicDetail = ({ route }: any) => {
     }
   };
 
-
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       try {
@@ -144,7 +234,7 @@ const MusicDetail = ({ route }: any) => {
     checkFavoriteStatus();
   }, [currentSong]);
 
-  const dowload = async () => {
+  const download = async () => {
     try {
       setIsDownloading(true);
       const fileUrl = currentSong.videoUrl;
@@ -171,6 +261,9 @@ const MusicDetail = ({ route }: any) => {
     }
   };
 
+
+  console.log(currentSong)
+  console.log(user)
 
 
   return (
@@ -204,35 +297,203 @@ const MusicDetail = ({ route }: any) => {
       </TouchableWithoutFeedback>
       <Space height={20} />
       <Section>
-        <TextComponent text={currentSong.name} size={sizes.title} font={fontFamilies.bold} color={colors.white} />
+        <TextComponent styles={{ borderBottomColor: colors.black2, borderBottomWidth: 2, paddingVertical: 10, marginBottom: 10 }} text={currentSong.name} size={sizes.title} font={fontFamilies.bold} color={colors.white} />
+        <Space height={8} />
+        <Row justifyContent='flex-start' styles={{
+          gap: 16, borderBottomColor: colors.black2,
+          borderBottomWidth: 2,
+          paddingBottom: 15,
+          marginBottom: 10,
+        }}>
+          <TouchableOpacity onPress={() => { }}>
+            <Image width={50} height={50} source={{ uri: currentSong.image }} style={{ width: 100, height: 100, borderRadius: 200, borderColor: colors.white, borderWidth: 2 }} />
+          </TouchableOpacity>
+          <View>
+            <TextComponent text={`Ca sĩ: ${currentSong.artists}`} size={sizes.title} font={fontFamilies.bold} color={colors.grey2} />
+            <TextComponent styles={{ maxWidth: 250 }} text={currentSong?.genres?.length > 0 ? `Thể loại: ${currentSong?.genres?.join(', ')}` : 'Thể loại: Chưa có dữ liệu'} size={sizes.title} font={fontFamilies.bold} color={colors.grey2} />
+          </View>
+        </Row>
       </Section>
 
-      <Space height={30} />
-      <Section
-        styles={{
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-        }}
-      >
-        <TouchableOpacity style={{ alignItems: 'center' }} onPress={saveTofavorite}>
-          <AntDesign name="heart" size={50} color={isFavorite ? colors.red : colors.white} />
-          <TextComponent text="Yêu thích" color={colors.white} />
-        </TouchableOpacity>
+      <Section>
+        <Row justifyContent='flex-start' styles={{ gap: 30, borderBottomColor: colors.black2, borderBottomWidth: 2, paddingBottom: 15 }}>
 
-        <TouchableOpacity style={{ alignItems: 'center' }}>
-          <FontAwesome name="share" size={50} color={colors.white} />
-          <TextComponent text="Chia sẻ" color={colors.white} />
-        </TouchableOpacity>
+          <TouchableOpacity style={{ alignItems: 'center' }} onPress={saveTofavorite}>
+            <AntDesign name="heart" size={30} color={isFavorite ? colors.red : colors.white} />
+            <Space height={8} />
+            <TextComponent size={18} text="Yêu thích" color={colors.white} />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={{ alignItems: 'center' }}
-          onPress={dowload}
-          disabled={isDownloading}
-        >
-          <Octicons name="download" size={50} color={isDownloading ? colors.grey : colors.white} />
-          <TextComponent text={isDownloading ? "Đang tải..." : "Tải về"} color={colors.white} />
-        </TouchableOpacity>
+          <TouchableOpacity style={{ alignItems: 'center' }}>
+            <FontAwesome name="share" size={30} color={colors.white} />
+            <Space height={8} />
+            <TextComponent size={18} text="Chia sẻ" color={colors.white} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ alignItems: 'center' }}
+            onPress={download}
+            disabled={isDownloading}
+          >
+            <Octicons name="download" size={30} color={isDownloading ? colors.grey : colors.white} />
+            <Space height={8} />
+            <TextComponent size={18} text={isDownloading ? "Đang tải..." : "Tải về"} color={colors.white} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ alignItems: 'center' }}
+            onPress={download}
+            disabled={isDownloading}
+          >
+            <Entypo name='add-to-list' size={30} color={colors.white} />
+            <Space height={8} />
+            <TextComponent size={18} text={isDownloading ? "Đang tải..." : "Thêm"} color={colors.white} />
+          </TouchableOpacity>
+        </Row>
+
+      </Section>
+
+      <Section>
+        <Row justifyContent="flex-start" styles={{ width: '100%' }}>
+          <Input
+            bordered={false}
+            color="transparent"
+            styles={{
+              width: sizes.width - 40,
+              paddingHorizontal: 0,
+            }}
+            value={newComment}
+            onChange={setNewComment}
+            placeholderColor={colors.white}
+            inputStyles={{ color: colors.white, fontSize: 18 }}
+            placeholder="Nhập bình luận"
+            prefix={
+              user?.photoURL ? (
+                <Row
+                  styles={{
+                    position: 'relative',
+                    borderRadius: 100,
+                    width: 30,
+                    height: 30,
+                    overflow: 'hidden',
+                  }}>
+                  <Image
+                    source={{ uri: user.photoURL }}
+                    width={20}
+                    height={20}
+                    style={{ width: 40, height: 40 }}
+                  />
+                </Row>
+              ) : (
+                <FontAwesome6
+                  name="circle-user"
+                  color={colors.white}
+                  size={40}
+                />
+              )
+            }
+            affix={
+              <TouchableOpacity onPress={handlePostComments}>
+                <Ionicons name="send" color={colors.white} size={24} />
+              </TouchableOpacity>
+            }
+          />
+        </Row>
+        <Space height={4} />
+
+        {reviews?.length > 0 ? (
+          <View>
+            <Row alignItems="flex-start" styles={{ flexDirection: 'column' }}>
+              {reviews[0]?.comments.map((item, index) => (
+                <Row
+                  styles={{
+                    position: 'relative',
+                    marginBottom: 10,
+                    width: sizes.width - 50,
+                  }}
+                  alignItems="flex-start"
+                  justifyContent="space-between"
+                  key={index}>
+                  <Row alignItems="flex-start">
+                    {item?.photoUrl ? (
+                      <Row
+                        styles={{
+                          position: 'relative',
+                          borderRadius: 100,
+                          width: 30,
+                          height: 30,
+                          overflow: 'hidden',
+                        }}>
+                        <Image
+                          source={{ uri: item.photoUrl }}
+                          width={20}
+                          height={20}
+                          style={{ width: 30, height: 30 }}
+                        />
+                      </Row>
+                    ) : (
+                      <FontAwesome6
+                        name="circle-user"
+                        color={colors.white}
+                        size={30}
+                      />
+                    )}
+                    <Space width={12} />
+                    <Row
+                      alignItems="flex-start"
+                      styles={{ flexDirection: 'column' }}>
+                      <TextComponent
+                        font={fontFamilies.medium}
+                        color={colors.white}
+                        text={item.user}
+                      />
+                      <TextComponent
+                        styles={{ maxWidth: sizes.width * 0.5 }}
+                        color={colors.white}
+                        text={item.userComments}
+                      />
+                    </Row>
+                  </Row>
+                  <Row>
+                    <TextComponent
+                      styles={{
+                        textAlign: 'right',
+                      }}
+                      color={colors.grey}
+                      text={parseTime(item.timestamp)}
+                    />
+                    {item?.userId === user?.uid && (
+                      <>
+                        <Space width={8} />
+                        <TouchableOpacity
+                          onPress={() =>
+                            handleDeleteComment(index, reviews[0])
+                          }>
+                          <TextComponent
+                            font={fontFamilies.medium}
+                            text="Xóa"
+                            color={colors.red}
+                          />
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </Row>
+                </Row>
+              ))}
+            </Row>
+          </View>
+        ) : (
+          <Section>
+            <Row>
+              <TextComponent
+                font={fontFamilies.medium}
+                color={colors.white}
+                text="Chưa có bình luận nào"
+              />
+            </Row>
+          </Section>
+        )}
+
 
       </Section>
 

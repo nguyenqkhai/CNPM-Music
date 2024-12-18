@@ -11,6 +11,7 @@ import { fontFamilies } from '../../constants/fontFamilies';
 import axios from 'axios';
 import { RecommnededSong } from '../../constants/models';
 import auth from '@react-native-firebase/auth'
+import { sizes } from '../../constants/sizes';
 
 const HomeScreen = ({ navigation }: any) => {
     const [categories, setCategories] = useState<{ [key: string]: Song[] }>({
@@ -75,18 +76,19 @@ const HomeScreen = ({ navigation }: any) => {
         >
             <View
                 style={{
-                    flex: 1,
                     margin: 10,
                     elevation: 2,
                     backgroundColor: colors.white,
                     borderRadius: 10,
                     overflow: 'hidden',
-                    width: 200,
+                    paddingBottom: 12,
+                    width: 230,
                 }}
             >
-                <Image source={{ uri: item.image }} style={{ width: 200, height: 200 }} resizeMode="cover" />
-                <TextComponent text={item.name} size={15} numberOfLines={1} />
-                <TextComponent text={item.artists} styles={{ alignSelf: 'flex-start' }} size={15} font={fontFamilies.bold} />
+                <Image source={{ uri: item.image }} style={{ width: 356, height: 200 }} resizeMode="cover" />
+                <TextComponent font={fontFamilies.semiBold} text={item.name} size={15} numberOfLines={2} styles={{ paddingHorizontal: 8, paddingTop: 12 }} />
+                <Space height={4} />
+                <TextComponent text={item.artists} styles={{ paddingHorizontal: 8 }} size={15} font={fontFamilies.bold} />
             </View>
         </TouchableOpacity>
     );
@@ -111,14 +113,16 @@ const HomeScreen = ({ navigation }: any) => {
                                 flex: 1,
                                 margin: 10,
                                 elevation: 2,
-                                backgroundColor: colors.white,
+                                backgroundColor: 'coral',
                                 borderRadius: 10,
                                 overflow: 'hidden',
                                 width: 200,
+
                             }}
                         >
                             <Image source={{ uri: item.image }} style={{ width: 200, height: 200 }} resizeMode="cover" />
                             <TextComponent text={item.name} size={15} numberOfLines={1} />
+                            <Space height={8} />
                             <TextComponent text={item.artists} size={12} color={colors.grey} />
                         </View>
                     </TouchableOpacity>
@@ -129,7 +133,7 @@ const HomeScreen = ({ navigation }: any) => {
 
 
     const renderCategory = (title: string, data: Song[], genre: string) => (
-        <Section>
+        <Section styles={{ borderBottomColor: colors.black2, borderBottomWidth: 1, paddingVertical: 8 }}>
             <TextComponent text={title} font={fontFamilies.bold} size={30} />
             <FlatList
                 data={data}
@@ -145,14 +149,17 @@ const HomeScreen = ({ navigation }: any) => {
         <Container style={{ backgroundColor: colors.white }}>
             <Section styles={{ paddingHorizontal: 2 }}>
                 <Space height={10} />
-                <View>
+                <View style={{ paddingVertical: 8 }}>
                     <Button
+                        title='Tìm kiếm bài hát'
+                        textStyleProps={{ color: colors.black2 }}
                         onPress={() => navigation.navigate('Search')}
                         styles={{
                             flexDirection: 'row',
-                            justifyContent: 'space-between',
                             alignItems: 'center',
                             paddingHorizontal: 16,
+                            width: sizes.width * 0.9,
+                            marginHorizontal: 'auto'
                         }}
                         icon={<Ionicons name="search" size={20} color="black" />}
                     />
