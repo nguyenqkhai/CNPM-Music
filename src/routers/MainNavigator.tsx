@@ -9,6 +9,7 @@ import CreatePlaylist from '../playlists/CreatePlaylist';
 import AddToPlaylist from '../playlists/AddToPlaylist';
 import PlaylistDetail from '../playlists/PlaylistDetail';
 import MusicScreenDetail from '../screens/musics/MusicScreenDetail';
+import ShowPlaylist from '../playlists/ShowPlaylist';
 
 const MainNagivator = () => {
   const Stack = createNativeStackNavigator();
@@ -23,6 +24,7 @@ const MainNagivator = () => {
       <Stack.Screen name="PlaylistDetail" component={PlaylistDetail} />
       <Stack.Screen name="Add" component={AddToPlaylist} />
       <Stack.Screen name="MusicDetailYoutube" component={MusicScreenDetail} />
+      <Stack.Screen name="ShowPlaylist" component={ShowPlaylist} />
     </Stack.Navigator>
   );
 };

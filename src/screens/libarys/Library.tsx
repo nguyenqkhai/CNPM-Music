@@ -169,7 +169,6 @@ const Library = ({ navigation }: any) => {
               }}>
               <TouchableOpacity onPress={() => {
                 navigation.navigate('MusicDetail', { song: item, playlist: recently })
-                console.log(item);
               }
               }>
                 <View style={{ flexDirection: 'column', alignItems: 'center', width: 230 }}>
@@ -279,7 +278,6 @@ const Library = ({ navigation }: any) => {
                     }}
                   />
                 )}
-                {/* <Image source={{uri:}}/> */}
               </View>
               <Space width={10} />
               <View style={{ flex: 1 }}>

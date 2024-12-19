@@ -4,18 +4,30 @@ import { View, Image, StyleSheet } from 'react-native';
 
 const GridImage = ({ images }: { images: string[] }) => {
     const maxImages = images.slice(0, 4);
-    const gridSize = Math.min(maxImages.length, 4);
+    const gridSize = maxImages.length;
+
+    const gridSizeStyles: { [key: number]: any } = {
+        1: styles.gridSize1,
+        2: styles.gridSize2,
+        3: styles.gridSize3,
+        4: styles.gridSize4,
+    };
+
+    const imageSizeStyles: { [key: number]: any } = {
+        1: styles.imageSize1,
+        2: styles.imageSize2,
+        3: styles.imageSize3,
+        4: styles.imageSize4,
+    };
+
     return (
-        <View
-            style={[
-                styles.gridContainer,
-                gridSize === 2 && styles.twoImages,
-                gridSize === 3 && styles.threeImages,
-                gridSize === 4 && styles.fourImages,
-            ]}
-        >
+        <View style={[styles.gridContainer, gridSizeStyles[gridSize]]}>
             {maxImages.map((uri, index) => (
-                <Image key={index} source={{ uri }} style={styles.gridImage} />
+                <Image
+                    key={index}
+                    source={{ uri }}
+                    style={[styles.gridImage, imageSizeStyles[gridSize]]}
+                />
             ))}
         </View>
     );
@@ -23,25 +35,45 @@ const GridImage = ({ images }: { images: string[] }) => {
 
 const styles = StyleSheet.create({
     gridContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
         width: sizes.width * 0.9,
         height: 250,
         borderRadius: 10,
         overflow: 'hidden',
     },
-    gridImage: {
-        width: '50%',
-        height: '50%',
+    gridSize1: {
+        flexDirection: 'row',
     },
-    twoImages: {
-        flexDirection: 'column',
+    gridSize2: {
+        flexDirection: 'row',
     },
-    threeImages: {
+    gridSize3: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
     },
-    fourImages: {
+    gridSize4: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    gridImage: {
+        borderWidth: 1,
+        borderColor: '#fff',
+    },
+    imageSize1: {
+        width: '100%',
+        height: '100%',
+    },
+    imageSize2: {
+        width: '50%',
+        height: '100%',
+    },
+    imageSize3: {
+        width: '33.33%',
+        height: '100%',
+    },
+    imageSize4: {
+        width: '50%',
+        height: '50%',
     },
 });
 

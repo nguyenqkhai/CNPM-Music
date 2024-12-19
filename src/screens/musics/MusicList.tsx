@@ -191,7 +191,7 @@ const MusicList = ({ navigation }: any) => {
             />
           </MenuTrigger>
           <MenuOptions >
-            <MenuOption style={{ padding: 8, borderBottomColor: colors.black2, borderBottomWidth: 1 }} onSelect={() => navigation.navigate()}>
+            <MenuOption style={{ padding: 8, borderBottomColor: colors.black2, borderBottomWidth: 1 }} onSelect={() => { navigation.navigate('ShowPlaylist', { selectedSong: item }); }}>
               <TextComponent text="Thêm vào danh sách" />
             </MenuOption>
             <MenuOption style={{ padding: 8 }} onSelect={() => { saveTofavorite(item); console.log(item) }}>

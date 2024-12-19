@@ -6,7 +6,7 @@ const clientId = '730e9ece26974c099f8399fb76b12916';
 const clientSecret = 'a0b72df5fdad4c7fb4e6c9a496a5335f';
 
 // YouTube Data API
-export const API_KEY = 'AIzaSyCJJZaSxNng4wd3Q-2852LChLj3vX8hdK4';
+export const API_KEY = 'AIzaSyAWA_YmjsyfQAGdx6C86uf4YG2yLqmB3E8';
 
 type YouTubeSearchItem = {
   id: {
