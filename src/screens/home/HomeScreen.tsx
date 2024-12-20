@@ -70,8 +70,8 @@ const HomeScreen = ({ navigation }: any) => {
     const renderSongItem = ({ item, playlist, genre }: { item: Song; playlist: Song[]; genre: string }) => (
         <TouchableOpacity
             onPress={() => {
-                navigation.navigate('MusicDetail', { song: item, playlist });
-                console.log(item);
+                navigation.navigate('MusicDetail', { song: item, playlist: playlist });
+                console.log(item.genres[0]);
             }}
         >
             <View

@@ -126,7 +126,7 @@ const MusicList = ({ navigation }: any) => {
             artists: song.artists,
             image: song.image,
             videoUrl: song.videoUrl,
-            genre: song.genres,
+            genres: song.genres,
           },
         },
         { merge: true },

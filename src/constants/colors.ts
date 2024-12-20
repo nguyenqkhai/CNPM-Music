@@ -20,5 +20,7 @@ export const colors = {
   instagram: '#c13584',
   twitter: '#1DA1F2',
   primary: '#8A2BE2',
-  lightGray: '#D3D3D3'
+  lightGray: '#D3D3D3',
+  google: '#4285F4',
+  googleRed: '#DB4437',
 };

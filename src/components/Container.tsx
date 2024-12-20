@@ -12,7 +12,7 @@ import {
 import { colors } from '../constants/colors';
 import { fontFamilies } from '../constants/fontFamilies';
 import TextComponent from './TextComponent';
-import {globalStyles} from '../styles/globalStyles'
+import { globalStyles } from '../styles/globalStyles'
 type Props = {
     children: ReactNode;
     title?: string;

@@ -10,6 +10,10 @@ import AddToPlaylist from '../playlists/AddToPlaylist';
 import PlaylistDetail from '../playlists/PlaylistDetail';
 import MusicScreenDetail from '../screens/musics/MusicScreenDetail';
 import ShowPlaylist from '../playlists/ShowPlaylist';
+import Statistics from '../screens/libarys/Statistics';
+import DownloadList from '../screens/libarys/DownloadList';
+import UpdateProfile from '../screens/profiles/UpdateProfile';
+import PasswordReset from '../screens/profiles/PasswordReset';
 
 const MainNagivator = () => {
   const Stack = createNativeStackNavigator();
@@ -25,6 +29,10 @@ const MainNagivator = () => {
       <Stack.Screen name="Add" component={AddToPlaylist} />
       <Stack.Screen name="MusicDetailYoutube" component={MusicScreenDetail} />
       <Stack.Screen name="ShowPlaylist" component={ShowPlaylist} />
+      <Stack.Screen name="Statistics" component={Statistics} />
+      <Stack.Screen name="Download" component={DownloadList} />
+      <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
+      <Stack.Screen name="PasswordReset" component={PasswordReset} />
     </Stack.Navigator>
   );
 };

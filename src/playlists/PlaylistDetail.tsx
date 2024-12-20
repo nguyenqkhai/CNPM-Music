@@ -19,6 +19,9 @@ import GridImage from '../playlists/GridImage';
 import { Section, Space } from '@bsdaoquang/rncomponent';
 import Octicons from 'react-native-vector-icons/Octicons'
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
+import Feather from 'react-native-vector-icons/Feather';
+
 
 const PlaylistDetail = ({ route, navigation }: any) => {
   const { playlist } = route.params;
@@ -79,12 +82,20 @@ const PlaylistDetail = ({ route, navigation }: any) => {
       </TouchableOpacity>
     </TouchableOpacity>
   );
-
+  console.log(playlist);
   return (
     <Container style={styles.container} isScroll={false}>
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.black2, borderBottomWidth: 1, marginBottom: 12 }]}>
-        <GridImage images={songs.map((song: Song) => song.image)} />
+        {playlist.songs.length === 0 ? (<Section styles={{ alignItems: 'center', marginTop: 50 }}>
+          <Feather name="music" size={100} color={colors.lightGray} />
+          <TextComponent
+            text="Không có bài hát trong danh sách"
+            font={fontFamilies.regular}
+            size={18}
+            color={colors.black2}
+            styles={{ marginTop: 10 }}
+          />
+        </Section>) : (<GridImage images={songs.map((song: Song) => song.image)} />)}
         <View style={styles.playlistInfo}>
           <TextComponent size={20} text={playlist.name} numberOfLines={2} styles={styles.playlistName} />
           <TextComponent size={18} text={`${user?.displayName}`} />
@@ -101,7 +112,12 @@ const PlaylistDetail = ({ route, navigation }: any) => {
             <TextComponent text='Tải xuống' />
           </TouchableOpacity>
           <Space width={30} />
-          <TouchableOpacity style={styles.shuffleButton}>
+          <TouchableOpacity style={styles.shuffleButton} onPress={() => {
+            {
+              playlist.songs.length !== 0 ? (navigation.navigate('MusicDetail', { playlist: songs, song: songs[0] })) : (<>
+              </>)
+            }
+          }}>
             <TextComponent text="PHÁT PLAYLIST" styles={styles.shuffleText} />
           </TouchableOpacity>
           <Space width={30} />
@@ -112,7 +128,6 @@ const PlaylistDetail = ({ route, navigation }: any) => {
         </Section>
       </View>
 
-      {/* Danh sách bài hát */}
       <FlatList
         data={songs}
         renderItem={renderSong}
@@ -124,7 +139,7 @@ const PlaylistDetail = ({ route, navigation }: any) => {
           ) : null
         }
       />
-    </Container>
+    </Container >
   );
 };
 
@@ -159,7 +174,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.lightGray,
-    // width: 100,
   },
   songImage: { width: 145, height: 80, borderRadius: 4 },
   songInfo: { flex: 1, marginLeft: 10 },

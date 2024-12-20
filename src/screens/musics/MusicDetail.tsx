@@ -29,7 +29,7 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
 import { parseTime } from '../../utils/helper';
 import Input from '../../components/InputComponent';
 
-const MusicDetail = ({ route }: any) => {
+const MusicDetail = ({ route, navigation }: any) => {
   const { playlist, song } = route.params;
   const [currentIndex, setCurrentIndex] = useState(
     playlist.findIndex((item: any) => item.name === song.name) || 0,
@@ -48,7 +48,7 @@ const MusicDetail = ({ route }: any) => {
   const { width } = Dimensions.get('window');
 
   const user = auth().currentUser
-  const musicName = currentSong?.name
+  const musicName = currentSong?.name;
 
   useEffect(() => {
     if (currentIndex >= 0 && playlist[currentIndex]) {
@@ -136,8 +136,6 @@ const MusicDetail = ({ route }: any) => {
       });
     }
   };
-
-
   const resetHideControlsTimer = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -190,11 +188,13 @@ const MusicDetail = ({ route }: any) => {
         await userfavoriteRef.set(
           {
             [songId]: {
-              name: currentSong.name,
+              name: currentSong.name || 'Unknown',
               artists: currentSong.artists || 'Unknown',
-              image: currentSong.image,
-              videoUrl: currentSong.videoUrl,
-              genres: currentSong.genres,
+              image: currentSong.image || '',
+              videoUrl: currentSong.videoUrl || '',
+              genres: Array.isArray(currentSong.genres) && currentSong.genres.length > 0
+                ? currentSong.genres
+                : ['Chưa xác định'],
             },
           },
           { merge: true }
@@ -261,11 +261,6 @@ const MusicDetail = ({ route }: any) => {
     }
   };
 
-
-  console.log(currentSong)
-  console.log(user)
-
-
   return (
     <Container isScroll={false} style={{ backgroundColor: colors.black }}>
       <TouchableWithoutFeedback onPress={handlePressScreen}>
@@ -310,7 +305,18 @@ const MusicDetail = ({ route }: any) => {
           </TouchableOpacity>
           <View>
             <TextComponent text={`Ca sĩ: ${currentSong.artists}`} size={sizes.title} font={fontFamilies.bold} color={colors.grey2} />
-            <TextComponent styles={{ maxWidth: 250 }} text={currentSong?.genres?.length > 0 ? `Thể loại: ${currentSong?.genres?.join(', ')}` : 'Thể loại: Chưa có dữ liệu'} size={sizes.title} font={fontFamilies.bold} color={colors.grey2} />
+            <TextComponent
+              styles={{ maxWidth: 250 }}
+              text={
+                (currentSong?.genres[0] === "Unknown Genre")
+                  ? 'Thể loại: Chưa xác định'
+                  : `Thể loại: ${currentSong.genres[0]}`
+              }
+              size={sizes.title}
+              font={fontFamilies.bold}
+              color={colors.grey2}
+            />
+
           </View>
         </Row>
       </Section>
@@ -337,17 +343,16 @@ const MusicDetail = ({ route }: any) => {
           >
             <Octicons name="download" size={30} color={isDownloading ? colors.grey : colors.white} />
             <Space height={8} />
-            <TextComponent size={18} text={isDownloading ? "Đang tải..." : "Tải về"} color={colors.white} />
+            <TextComponent size={18} text={isDownloading ? "..." : "Tải về"} color={colors.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={{ alignItems: 'center' }}
-            onPress={download}
-            disabled={isDownloading}
+            onPress={() => { navigation.navigate('ShowPlaylist', { selectedSong: currentSong }); }}
           >
             <Entypo name='add-to-list' size={30} color={colors.white} />
             <Space height={8} />
-            <TextComponent size={18} text={isDownloading ? "Đang tải..." : "Thêm"} color={colors.white} />
+            <TextComponent text="Thêm" color={colors.white} />
           </TouchableOpacity>
         </Row>
 

@@ -10,12 +10,15 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import TextComponent from '../../components/TextComponent';
 import { fontFamilies } from '../../constants/fontFamilies';
-import { Row, Section, Space } from '@bsdaoquang/rncomponent';
+import { Row, Section, Space, Text } from '@bsdaoquang/rncomponent';
 import Container from '../../components/Container';
 import { colors } from '../../constants/colors';
 import { sizes } from '../../constants/sizes';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
+import { flushCompileCache } from 'module';
 
 const Library = ({ navigation }: any) => {
   const [recently, setRecently] = useState<any[]>([]);
@@ -117,7 +120,13 @@ const Library = ({ navigation }: any) => {
         flex: 1,
         backgroundColor: colors.white,
       }}>
-      <Section styles={{ paddingTop: 20, borderBottomWidth: 1, borderBottomColor: colors.black2, paddingBottom: 36 }}>
+      <Section
+        styles={{
+          paddingTop: 20,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.black2,
+          paddingBottom: 36,
+        }}>
         <TextComponent text="Thư viện" font={fontFamilies.bold} size={28} />
         <Space height={20} />
         <Row justifyContent="space-around">
@@ -125,19 +134,37 @@ const Library = ({ navigation }: any) => {
             style={styles.button}
             onPress={() => navigation.navigate('Favorite')}>
             <Icon name="favorite" size={30} color="dodgerblue" />
-            <TextComponent size={18} text="Yêu thích" font={fontFamilies.regular} />
-            <TextComponent size={18} text={`${favoriteCount}`} font={fontFamilies.bold} />
+            <TextComponent
+              size={18}
+              text="Yêu thích"
+              font={fontFamilies.regular}
+            />
+            <TextComponent
+              size={18}
+              text={`${favoriteCount}`}
+              font={fontFamilies.bold}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('Download')}>
             <Icon name="file-download" size={30} color="purple" />
-            <TextComponent size={18} text="Tải về" font={fontFamilies.regular} />
+            <TextComponent
+              size={18}
+              text="Tải về"
+              font={fontFamilies.regular}
+            />
             <TextComponent size={18} text="10" font={fontFamilies.bold} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Statistics')}>
             <Icon name="cloud-upload" size={30} color="orange" />
-            <TextComponent size={18} text="Tải lên" font={fontFamilies.regular} />
+            <TextComponent
+              size={18}
+              text="Thống kê"
+              font={fontFamilies.regular}
+            />
             <TextComponent size={18} text="10" font={fontFamilies.bold} />
           </TouchableOpacity>
         </Row>
@@ -145,12 +172,20 @@ const Library = ({ navigation }: any) => {
 
       <Space height={20} />
 
-      <Section styles={{ borderBottomColor: colors.black2, borderBottomWidth: 1, paddingBottom: 36 }}>
-        <TextComponent
-          text="Nghe gần đây >"
-          font={fontFamilies.bold}
-          size={28}
-        />
+      <Section
+        styles={{
+          borderBottomColor: colors.black2,
+          borderBottomWidth: 1,
+          paddingBottom: 36,
+        }}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <TextComponent
+            text="Nghe gần đây"
+            font={fontFamilies.bold}
+            size={28}
+          />
+          <Feather name="chevron-right" size={28} style={{ fontFamily: fontFamilies.bold, position: 'absolute', right: 8 }} />
+        </TouchableOpacity>
         <Space height={12} />
         <FlatList
           data={recently}
@@ -167,11 +202,19 @@ const Library = ({ navigation }: any) => {
                 overflow: 'hidden',
                 backgroundColor: colors.white,
               }}>
-              <TouchableOpacity onPress={() => {
-                navigation.navigate('MusicDetail', { song: item, playlist: recently })
-              }
-              }>
-                <View style={{ flexDirection: 'column', alignItems: 'center', width: 230 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('MusicDetail', {
+                    song: item,
+                    playlist: recently,
+                  }); console.log(item);
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: 230,
+                  }}>
                   <Image
                     source={{ uri: item.image }}
                     style={{ width: 356, height: 200 }}
@@ -200,7 +243,7 @@ const Library = ({ navigation }: any) => {
                       paddingBottom: 8,
                       fontSize: 18,
                       overflow: 'hidden',
-                      textAlign: 'center'
+                      textAlign: 'center',
                     }}
                     numberOfLines={1}
                     ellipsizeMode="tail">
@@ -253,7 +296,10 @@ const Library = ({ navigation }: any) => {
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => { navigation.navigate('PlaylistDetail', { playlist: item }); console.log(item.id) }}
+              onPress={() => {
+                navigation.navigate('PlaylistDetail', { playlist: item });
+                console.log(item.id);
+              }}
               style={{ flexDirection: 'row', padding: 10, alignItems: 'center' }}>
               <View
                 style={{
@@ -292,7 +338,11 @@ const Library = ({ navigation }: any) => {
                   size={18}
                 />
               </View>
-              <TouchableOpacity style={{ padding: 10 }} onPress={() => { deletePlaylist(item.id) }}>
+              <TouchableOpacity
+                style={{ padding: 10 }}
+                onPress={() => {
+                  deletePlaylist(item.id);
+                }}>
                 <Icon name="delete" size={30} color={colors.red} />
               </TouchableOpacity>
             </TouchableOpacity>
