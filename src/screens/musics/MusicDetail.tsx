@@ -23,7 +23,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 import RNFS from 'react-native-fs'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
-import { Reviews } from 'constants/models';
+import { Comments } from 'constants/models';
 import Toast from 'react-native-toast-message';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
 import { parseTime } from '../../utils/helper';
@@ -40,9 +40,8 @@ const MusicDetail = ({ route, navigation }: any) => {
   const playerRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [reviews, setReviews] = useState<Reviews[]>([]);
+  const [comments, setComments] = useState<Comments[]>([]);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [loadingComments, setLoadingComments] = useState(true);
   const { width } = Dimensions.get('window');
@@ -68,14 +67,14 @@ const MusicDetail = ({ route, navigation }: any) => {
 
   const handleGetComments = () => {
     firestore()
-      .collection('reviews')
+      .collection('comments')
       .where('name', '==', musicName)
       .onSnapshot((snapshot: any) => {
         const items = snapshot.docs.map((doc: any) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setReviews(items);
+        setComments(items);
       });
   };
 
@@ -97,15 +96,15 @@ const MusicDetail = ({ route, navigation }: any) => {
       timestamp: new Date(),
     };
 
-    if (reviews.length > 0) {
+    if (comments.length > 0) {
       await firestore()
-        .doc(`reviews/${reviews[0].id}`)
+        .doc(`comments/${comments[0].id}`)
         .update({
           comments: firestore.FieldValue.arrayUnion(commentData),
         });
     } else {
       await firestore()
-        .collection('reviews')
+        .collection('comments')
         .add({
           name: musicName,
           comments: [commentData],
@@ -114,13 +113,13 @@ const MusicDetail = ({ route, navigation }: any) => {
     setNewComment('');
   };
 
-  const handleDeleteComment = async (index: number, reviews: Reviews) => {
+  const handleDeleteComment = async (index: number, comments: Comments) => {
     try {
       await firestore()
-        .collection('reviews')
-        .doc(reviews.id)
+        .collection('comments')
+        .doc(comments.id)
         .update({
-          comments: firestore.FieldValue.arrayRemove(reviews.comments[index]),
+          comments: firestore.FieldValue.arrayRemove(comments.comments[index]),
         });
       Toast.show({
         type: 'success',
@@ -170,7 +169,7 @@ const MusicDetail = ({ route, navigation }: any) => {
         return;
       }
 
-      const songId = String(currentSong.id); // ID của bài hát
+      const songId = String(currentSong.id);
       const userfavoriteRef = firestore().collection('favorite').doc(userId);
 
       const userfavoriteDoc = await userfavoriteRef.get();
@@ -406,10 +405,10 @@ const MusicDetail = ({ route, navigation }: any) => {
         </Row>
         <Space height={4} />
 
-        {reviews?.length > 0 ? (
+        {comments?.length > 0 ? (
           <View>
             <Row alignItems="flex-start" styles={{ flexDirection: 'column' }}>
-              {reviews[0]?.comments.map((item, index) => (
+              {comments[0]?.comments.map((item, index) => (
                 <Row
                   styles={{
                     position: 'relative',
@@ -472,7 +471,7 @@ const MusicDetail = ({ route, navigation }: any) => {
                         <Space width={8} />
                         <TouchableOpacity
                           onPress={() =>
-                            handleDeleteComment(index, reviews[0])
+                            handleDeleteComment(index, comments[0])
                           }>
                           <TextComponent
                             font={fontFamilies.medium}

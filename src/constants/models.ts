@@ -7,7 +7,7 @@ export interface SongBase {
   genres: string[];
 }
 
-export interface Comments {
+export interface Comment {
   user: string;
   userId?: string;
   userComments: string;
@@ -15,10 +15,10 @@ export interface Comments {
   photoUrl: string;
 }
 
-export interface Reviews {
+export interface Comments {
   id: string;
   name: string;
-  comments: Comments[];
+  comments: Comment[];
 }
 
 export interface Top100 extends SongBase {}

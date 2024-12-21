@@ -123,7 +123,7 @@ const Profile = ({ navigation }: any) => {
 
               <Space height={8} />
 
-              <TouchableOpacity onPress={() => navigation.navigate('UpdateProfile')}>
+              {/* <TouchableOpacity onPress={() => navigation.navigate('UpdateProfile')}>
                 <Row
                   justifyContent="flex-start"
                   styles={{
@@ -137,7 +137,7 @@ const Profile = ({ navigation }: any) => {
                   <Space width={12} />
                   <TextComponent text="Cập nhật thông tin" color={themeColors.text} />
                 </Row>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               <Space height={8} />
 

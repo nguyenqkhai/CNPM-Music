@@ -6,6 +6,8 @@ import {
   Image,
   FlatList,
   Animated,
+  Modal,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import TextComponent from '../../components/TextComponent';
@@ -13,12 +15,12 @@ import { fontFamilies } from '../../constants/fontFamilies';
 import { Row, Section, Space, Text } from '@bsdaoquang/rncomponent';
 import Container from '../../components/Container';
 import { colors } from '../../constants/colors';
-import { sizes } from '../../constants/sizes';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
-import { flushCompileCache } from 'module';
+import { Menu, MenuOption, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
+import { sizes } from '../../constants/sizes';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Library = ({ navigation }: any) => {
   const [recently, setRecently] = useState<any[]>([]);
@@ -26,8 +28,13 @@ const Library = ({ navigation }: any) => {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [favoriteCount, setFavoriteCount] = useState(0);
 
+  const [isRenameModalVisible, setRenameModalVisible] = useState(false);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+
+  const userId = auth().currentUser?.uid;
+
   const fetchRecently = () => {
-    const userId = auth().currentUser?.uid;
     if (userId) {
       try {
         const useRef = firestore().collection('recently list').doc(userId);
@@ -105,6 +112,28 @@ const Library = ({ navigation }: any) => {
         console.log('Lỗi khi tải playlist: ', error);
       }
     }
+  };
+
+  const renamePlaylist = async () => {
+    if (userId && selectedPlaylist && newPlaylistName.trim()) {
+      try {
+        const playlistRef = firestore().collection('playlists').doc(userId);
+        await playlistRef.update({
+          [`${selectedPlaylist.id}.name`]: newPlaylistName,
+        });
+        console.log('Playlist renamed to:', newPlaylistName);
+        setRenameModalVisible(false);
+        setNewPlaylistName('');
+      } catch (error) {
+        console.log('Error renaming playlist:', error);
+      }
+    }
+  };
+
+  const showRenameModal = (playlist: any) => {
+    setSelectedPlaylist(playlist);
+    setNewPlaylistName(playlist.name);
+    setRenameModalVisible(true);
   };
 
   useEffect(() => {
@@ -309,21 +338,10 @@ const Library = ({ navigation }: any) => {
                   backgroundColor: colors.white,
                   marginRight: 10,
                 }}>
-                {item.image ? (
-                  <Image
-                    source={item.image}
-                    style={{ height: 100, width: 100 }}
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: 100,
-                      height: 100,
-                      borderRadius: 10,
-                      backgroundColor: colors.grey,
-                    }}
-                  />
-                )}
+                <Image
+                  source={require('../../../assets/images/playlist.png')}
+                  style={{ height: 100, width: 100 }}
+                />
               </View>
               <Space width={10} />
               <View style={{ flex: 1 }}>
@@ -338,16 +356,55 @@ const Library = ({ navigation }: any) => {
                   size={18}
                 />
               </View>
-              <TouchableOpacity
-                style={{ padding: 10 }}
-                onPress={() => {
-                  deletePlaylist(item.id);
-                }}>
-                <Icon name="delete" size={30} color={colors.red} />
-              </TouchableOpacity>
+              <Menu>
+                <MenuTrigger>
+                  <Ionicons name="ellipsis-vertical" size={sizes.icon} color={colors.black} />
+                </MenuTrigger>
+                <MenuOptions>
+                  <MenuOption
+                    style={{ padding: 8, borderBottomColor: colors.black2, borderBottomWidth: 1 }}
+                    onSelect={() => { showRenameModal(item) }}
+                  >
+                    <TextComponent text="Đổi tên playlist" />
+                  </MenuOption>
+                  <MenuOption
+                    style={{ padding: 8 }}
+                    onSelect={() => { deletePlaylist(item.id) }}>
+                    <TextComponent
+                      text='Xóa playlist'
+                    />
+                  </MenuOption>
+                </MenuOptions>
+              </Menu>
             </TouchableOpacity>
           )}
         />
+        <Modal
+          transparent
+          visible={isRenameModalVisible}
+          onRequestClose={() => setRenameModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TextComponent text="Rename Playlist" font={fontFamilies.bold} size={20} />
+              <TextInput
+                value={newPlaylistName}
+                onChangeText={setNewPlaylistName}
+                style={styles.input}
+                placeholder="Nhập tên mới cho playlist"
+              />
+              <Row justifyContent="space-between">
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => setRenameModalVisible(false)}>
+                  <TextComponent text="Thoát" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={renamePlaylist}>
+                  <TextComponent text="Lưu" />
+                </TouchableOpacity>
+              </Row>
+            </View>
+          </View>
+        </Modal>
       </Section>
     </Container>
   );
@@ -362,6 +419,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.grey,
     width: '30%',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.grey,
+    borderRadius: 5,
+    padding: 10,
+    marginVertical: 10,
   },
 });
 

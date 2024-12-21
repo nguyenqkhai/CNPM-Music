@@ -26,6 +26,7 @@
     "react-native": "^0.76.5",
     "react-native-checkbox": "^2.0.0",
     "react-native-date-picker": "^5.0.8",
+    "react-native-dialog": "^9.3.0",
     "react-native-fs": "^2.20.0",
     "react-native-popup-menu": "^0.16.1",
     "react-native-reanimated": "^3.16.3",

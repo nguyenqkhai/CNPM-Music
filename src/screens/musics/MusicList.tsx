@@ -26,13 +26,13 @@ import { Song } from '../../constants/models';
 import firestore from '@react-native-firebase/firestore';
 import { Section, Space } from '@bsdaoquang/rncomponent';
 import { getMusicListByKeyword } from '../../utils/handleAPI';
-import Toast, { SuccessToast } from 'react-native-toast-message';
+
 const MusicList = ({ navigation }: any) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [displayedSongs, setDisplayedSongs] = useState<Song[]>([]);
   const [loadCount, setLoadCount] = useState(10);
   const [loading, setLoading] = useState(false);
-  const [marqueeAnim] = useState(new Animated.Value(0));
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -40,14 +40,34 @@ const MusicList = ({ navigation }: any) => {
       const fetchedSongs = await getMusicListByKeyword('vietnamese pop');
 
       if (fetchedSongs && Array.isArray(fetchedSongs)) {
-        const validSongs = fetchedSongs.filter((song: Song) => song.videoUrl);
+        const validSongs = fetchedSongs.filter((song) => song.videoUrl);
         setSongs(validSongs);
         setDisplayedSongs(validSongs.slice(0, loadCount));
       }
       setLoading(false);
     };
 
+    const fetchFavorites = async () => {
+      try {
+        const userId = auth().currentUser?.uid;
+        if (!userId) return;
+
+        const userFavoriteRef = firestore().collection('favorite').doc(userId);
+        const userFavoriteDoc = await userFavoriteRef.get();
+
+        if (userFavoriteDoc.exists) {
+          const favoriteData = userFavoriteDoc.data();
+          if (favoriteData) {
+            setFavoriteIds(new Set(Object.keys(favoriteData)));
+          }
+        }
+      } catch (error) {
+        console.log('Lỗi khi lấy danh sách yêu thích:', error);
+      }
+    };
+
     fetchSongs();
+    fetchFavorites();
   }, []);
 
   const loadMoreSongs = () => {
@@ -69,21 +89,16 @@ const MusicList = ({ navigation }: any) => {
 
       const songId = String(song.id);
       const userfavoriteRef = firestore().collection('favorite').doc(userId);
-      const userfavoriteDoc = await userfavoriteRef.get();
-
-      let isFavorite = false;
-
-      if (userfavoriteDoc.exists) {
-        const favoriteData = userfavoriteDoc.data();
-        if (favoriteData && favoriteData[songId]) {
-          console.log('Bài hát đã tồn tại trong thư viện');
-          isFavorite = true;
-        }
-      }
+      const isFavorite = favoriteIds.has(songId);
 
       if (isFavorite) {
         await userfavoriteRef.update({
           [songId]: firestore.FieldValue.delete(),
+        });
+        setFavoriteIds((prev) => {
+          const updated = new Set(prev);
+          updated.delete(songId);
+          return updated;
         });
         console.log('Đã xóa bài hát khỏi thư viện');
       } else {
@@ -95,12 +110,12 @@ const MusicList = ({ navigation }: any) => {
               artists: song.artists,
               image: song.image,
               videoUrl: song.videoUrl,
-              genres: song.genres
+              genres: song.genres,
             },
           },
           { merge: true },
         );
-        console.log(song.genres);
+        setFavoriteIds((prev) => new Set(prev).add(songId));
         console.log('Đã thêm bài hát vào thư viện');
       }
     } catch (error) {
@@ -132,82 +147,81 @@ const MusicList = ({ navigation }: any) => {
         { merge: true },
       );
     } catch (error) {
-      console.log('Lỗi khi lưu bài hát đã nghe gần đây');
+      console.log('Lỗi khi lưu bài hát đã nghe gần đây:', error);
     }
   };
 
-  const renderSong = ({ item }: { item: Song }) => (
-    <Section>
-      <TouchableOpacity
-        onPress={() => {
-          saveRecentlyPlayed(item);
-          console.log("videoid: ", item);
-          navigation.navigate('MusicDetail', { song: item, playlist: songs });
-        }}
-        style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{ width: 90, position: 'relative', overflow: 'hidden', borderRadius: 4 }}>
-          <Image
-            source={{ uri: item.image }}
-            resizeMode='cover'
-            style={{ width: 145, height: 80, borderRadius: 5, marginRight: 5 }}
-          />
-        </View>
-        <Section
-          styles={{
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}>
-          <Animated.Text
-            style={{
-              fontFamily: fontFamilies.semiBold,
-              width: 250,
-              fontSize: sizes.text,
-              overflow: 'hidden',
-            }}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.name}
-          </Animated.Text>
+  const renderSong = ({ item }: any) => {
+    const isFavorite = favoriteIds.has(String(item.id));
 
-          <Animated.Text
-            style={{
-              fontFamily: fontFamilies.regular,
-              width: 250,
-              fontSize: sizes.desc,
-              overflow: 'hidden',
-            }}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.artists}
-          </Animated.Text>
-        </Section>
-
-        <Menu>
-          <MenuTrigger>
-            <Icon
-              name="ellipsis-vertical"
-              size={sizes.icon}
-              color={colors.black}
+    return (
+      <Section>
+        <TouchableOpacity
+          onPress={() => {
+            saveRecentlyPlayed(item);
+            navigation.navigate('MusicDetail', { song: item, playlist: songs });
+          }}
+          style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ width: 90, overflow: 'hidden', borderRadius: 4 }}>
+            <Image
+              source={{ uri: item.image }}
+              resizeMode="cover"
+              style={{ width: 145, height: 80, borderRadius: 5, marginRight: 5 }}
             />
-          </MenuTrigger>
-          <MenuOptions >
-            <MenuOption style={{ padding: 8, borderBottomColor: colors.black2, borderBottomWidth: 1 }} onSelect={() => { navigation.navigate('ShowPlaylist', { selectedSong: item }); }}>
-              <TextComponent text="Thêm vào danh sách" />
-            </MenuOption>
-            <MenuOption style={{ padding: 8 }} onSelect={() => { saveTofavorite(item); console.log(item) }}>
-              <TextComponent text="Yêu thích bài hát" />
-            </MenuOption>
-          </MenuOptions>
-        </Menu>
-      </TouchableOpacity>
-    </Section>
-  );
+          </View>
+          <Section styles={{ flexDirection: 'column', justifyContent: 'center' }}>
+            <Animated.Text
+              style={{
+                fontFamily: fontFamilies.semiBold,
+                width: 250,
+                fontSize: sizes.text,
+                overflow: 'hidden',
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {item.name}
+            </Animated.Text>
+
+            <Animated.Text
+              style={{
+                fontFamily: fontFamilies.regular,
+                width: 250,
+                fontSize: sizes.desc,
+                overflow: 'hidden',
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {item.artists}
+            </Animated.Text>
+          </Section>
+
+          <Menu>
+            <MenuTrigger>
+              <Icon name="ellipsis-vertical" size={sizes.icon} color={colors.black} />
+            </MenuTrigger>
+            <MenuOptions>
+              <MenuOption
+                style={{ padding: 8, borderBottomColor: colors.black2, borderBottomWidth: 1 }}
+                onSelect={() => navigation.navigate('ShowPlaylist', { selectedSong: item })}>
+                <TextComponent text="Thêm vào danh sách" />
+              </MenuOption>
+              <MenuOption
+                style={{ padding: 8 }}
+                onSelect={() => saveTofavorite(item)}>
+                <TextComponent
+                  text={isFavorite ? 'Xóa bài hát khỏi danh sách yêu thích' : 'Yêu thích bài hát'}
+                />
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+        </TouchableOpacity>
+      </Section>
+    );
+  };
 
   return (
     <MenuProvider>
-      <Container
-        isScroll={true}
-        style={{ backgroundColor: colors.white, flex: 1 }}>
+      <Container style={{ backgroundColor: colors.white, flex: 1 }} isScroll={false}>
         {/* Header */}
         <Section
           styles={{
@@ -219,11 +233,7 @@ const MusicList = ({ navigation }: any) => {
           }}>
           <Image
             source={{ uri: 'https://example.com/avatar.jpg' }}
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-            }}
+            style={{ width: 50, height: 50, borderRadius: 25 }}
           />
 
           <TextComponent
@@ -233,18 +243,13 @@ const MusicList = ({ navigation }: any) => {
             size={sizes.title}
           />
 
-          {/* Nút tìm kiếm */}
           <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity onPress={() => navigation.navigate('Search')}>
               <Icon name="search" size={sizes.icon} color={colors.white} />
             </TouchableOpacity>
             <Space width={30} />
             <TouchableOpacity onPress={() => console.log('mic')}>
-              <FontAwesome
-                name="microphone"
-                size={sizes.icon}
-                color={colors.white}
-              />
+              <FontAwesome name="microphone" size={sizes.icon} color={colors.white} />
             </TouchableOpacity>
           </View>
         </Section>
@@ -254,7 +259,7 @@ const MusicList = ({ navigation }: any) => {
         <FlatList
           data={displayedSongs}
           renderItem={renderSong}
-          keyExtractor={item => item.name}
+          keyExtractor={(item) => String(item.id)}
           nestedScrollEnabled={true}
           onEndReached={loadMoreSongs}
           onEndReachedThreshold={0.1}

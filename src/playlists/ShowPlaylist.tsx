@@ -162,8 +162,10 @@ const ShowPlaylist = ({ navigation, route }: any) => {
                 }}>
                 <TouchableOpacity
                     onPress={addSongToSelectedPlaylists}
+                    disabled={selectedPlaylists.size === 0}
                     style={{
-                        alignSelf: 'center'
+                        alignSelf: 'center',
+                        opacity: selectedPlaylists.size > 0 ? 1 : 0.5,
                     }}
                 >
                     <TextComponent
