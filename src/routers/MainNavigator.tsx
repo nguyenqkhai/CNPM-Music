@@ -14,6 +14,7 @@ import Statistics from '../screens/libarys/Statistics';
 import DownloadList from '../screens/libarys/DownloadList';
 import UpdateProfile from '../screens/profiles/UpdateProfile';
 import PasswordReset from '../screens/profiles/PasswordReset';
+import SongArtist from '../screens/musics/SongArtist';
 
 const MainNagivator = () => {
   const Stack = createNativeStackNavigator();
@@ -33,6 +34,7 @@ const MainNagivator = () => {
       <Stack.Screen name="Download" component={DownloadList} />
       <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
       <Stack.Screen name="PasswordReset" component={PasswordReset} />
+      <Stack.Screen name="Songs" component={SongArtist} />
     </Stack.Navigator>
   );
 };

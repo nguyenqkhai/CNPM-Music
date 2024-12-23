@@ -299,7 +299,7 @@ const MusicDetail = ({ route, navigation }: any) => {
           paddingBottom: 15,
           marginBottom: 10,
         }}>
-          <TouchableOpacity onPress={() => { }}>
+          <TouchableOpacity onPress={() => { navigation.navigate('Songs', { artist: currentSong.artists }) }}>
             <Image width={50} height={50} source={{ uri: currentSong.image }} style={{ width: 100, height: 100, borderRadius: 200, borderColor: colors.white, borderWidth: 2 }} />
           </TouchableOpacity>
           <View>

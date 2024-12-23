@@ -37,7 +37,7 @@ const MusicList = ({ navigation }: any) => {
   useEffect(() => {
     const fetchSongs = async () => {
       setLoading(true);
-      const fetchedSongs = await getMusicListByKeyword('vietnamese pop');
+      const fetchedSongs = await getMusicListByKeyword('vietnamese vpop');
 
       if (fetchedSongs && Array.isArray(fetchedSongs)) {
         const validSongs = fetchedSongs.filter((song) => song.videoUrl);
@@ -73,7 +73,7 @@ const MusicList = ({ navigation }: any) => {
   const loadMoreSongs = () => {
     if (loading) return;
     setLoading(true);
-    const newLoadCount = loadCount + 10;
+    const newLoadCount = loadCount + 100;
     setDisplayedSongs(songs.slice(0, newLoadCount));
     setLoadCount(newLoadCount);
     setLoading(false);
@@ -262,7 +262,7 @@ const MusicList = ({ navigation }: any) => {
           keyExtractor={(item) => String(item.id)}
           nestedScrollEnabled={true}
           onEndReached={loadMoreSongs}
-          onEndReachedThreshold={0.1}
+          onEndReachedThreshold={0.5}
           ListFooterComponent={
             loading ? (
               <ActivityIndicator size="large" color={colors.black} />
