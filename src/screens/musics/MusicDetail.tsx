@@ -28,6 +28,7 @@ import Toast from 'react-native-toast-message';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
 import { parseTime } from '../../utils/helper';
 import Input from '../../components/InputComponent';
+import Share from 'react-native-share';
 
 const MusicDetail = ({ route, navigation }: any) => {
   const { playlist, song } = route.params;
@@ -206,6 +207,22 @@ const MusicDetail = ({ route, navigation }: any) => {
       Alert.alert('Lỗi', 'Không thể cập nhật danh sách yêu thích. Vui lòng thử lại.');
     }
   };
+  const handleShare = async () => {
+    const shareOptions = {
+      title: currentSong.name,
+      message: `Check out this song: ${currentSong.name} by ${currentSong.artists}`,
+      url: currentSong.videoUrl,
+      social: Share.Social.WHATSAPP,
+    };
+
+    try {
+      await Share.open(shareOptions);
+      console.log('Chia sẻ thành công!');
+    } catch (error: any) {
+      console.log('Share failed with error:', error.message);
+    }
+  };
+
 
   useEffect(() => {
     const checkFavoriteStatus = async () => {
@@ -329,7 +346,7 @@ const MusicDetail = ({ route, navigation }: any) => {
             <TextComponent size={18} text="Yêu thích" color={colors.white} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={{ alignItems: 'center' }}>
+          <TouchableOpacity style={{ alignItems: 'center' }} onPress={handleShare}>
             <FontAwesome name="share" size={30} color={colors.white} />
             <Space height={8} />
             <TextComponent size={18} text="Chia sẻ" color={colors.white} />
@@ -382,7 +399,7 @@ const MusicDetail = ({ route, navigation }: any) => {
                     overflow: 'hidden',
                   }}>
                   <Image
-                    source={{ uri: user.photoURL }}
+                    // source={{ uri: user.photoURL }}
                     width={20}
                     height={20}
                     style={{ width: 40, height: 40 }}

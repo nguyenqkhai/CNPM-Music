@@ -1,15 +1,15 @@
-import {Alert, StyleSheet, TouchableOpacity} from 'react-native';
-import React, {useState} from 'react';
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
 import Container from '../components/Container';
-import {colors} from '../constants/colors';
+import { colors } from '../constants/colors';
 import TextComponent from '../components/TextComponent';
-import {fontFamilies} from '../constants/fontFamilies';
-import {Input, Section, Space} from '@bsdaoquang/rncomponent';
+import { fontFamilies } from '../constants/fontFamilies';
+import { Input, Section, Space } from '@bsdaoquang/rncomponent';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
-const CreatePlaylist = ({navigation}: any) => {
+const CreatePlaylist = ({ navigation }: any) => {
   const [playlistName, setPlaylistName] = useState('');
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
 
@@ -18,13 +18,13 @@ const CreatePlaylist = ({navigation}: any) => {
       Alert.alert('Lỗi', 'Vui lòng nhập tên playlist.');
       return;
     }
-  
+
     const userId = auth().currentUser?.uid;
     if (!userId) {
       Alert.alert('Lỗi', 'Bạn chưa đăng nhập');
       return;
     }
-  
+
     try {
       const playlistId = firestore().collection('playlists').doc().id;
       const playlistRef = firestore().collection('playlists').doc(userId)
@@ -33,14 +33,14 @@ const CreatePlaylist = ({navigation}: any) => {
 
       await playlistRef.set(
         {
-            [playlistId]: {
-                auther: userData?.userName,
-                name: playlistName,
-                songs: []
-            }
+          [playlistId]: {
+            auther: userData?.userName,
+            name: playlistName,
+            songs: []
+          }
         },
-        {merge: true}
-    );
+        { merge: true }
+      );
       Alert.alert('Thành công', 'Playlist đã được tạo!');
       console.log('Playlist đã được tạo');
     } catch (error) {
@@ -48,14 +48,14 @@ const CreatePlaylist = ({navigation}: any) => {
       Alert.alert('Lỗi', 'Không thể tạo playlist. Vui lòng thử lại.');
     }
   };
-  
+
   const handleChangeText = (text: string) => {
     setPlaylistName(text);
     setIsButtonEnabled(text.trim() !== '');
   };
 
   return (
-    <Container style={{backgroundColor: colors.white}}>
+    <Container style={{ backgroundColor: colors.white }}>
       <Space height={20} />
 
       <Section
@@ -95,12 +95,12 @@ const CreatePlaylist = ({navigation}: any) => {
         <TouchableOpacity
           style={[
             styles.createButton,
-            {backgroundColor: isButtonEnabled ? colors.blue : colors.grey},
+            { backgroundColor: isButtonEnabled ? colors.blue : colors.grey },
           ]}
           onPress={() => {
             if (isButtonEnabled) {
-              handleCreatePlaylist(); 
-              navigation.goBack(); 
+              handleCreatePlaylist();
+              navigation.goBack();
             }
           }}
           disabled={!isButtonEnabled}>

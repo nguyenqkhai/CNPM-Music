@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors } from '../constants/colors';
@@ -17,11 +18,11 @@ import firestore from '@react-native-firebase/firestore';
 import { Song } from '../constants/models';
 import GridImage from '../playlists/GridImage';
 import { Section, Space } from '@bsdaoquang/rncomponent';
-import Octicons from 'react-native-vector-icons/Octicons'
+import Octicons from 'react-native-vector-icons/Octicons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 import Feather from 'react-native-vector-icons/Feather';
-
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const PlaylistDetail = ({ route, navigation }: any) => {
   const { playlist } = route.params;
@@ -30,74 +31,117 @@ const PlaylistDetail = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(false);
 
   const user = auth().currentUser;
+  const userId = user?.uid || undefined;
 
-  const saveTofavorite = async (song: Song) => {
+  const removeSongFromPlaylist = async (userId: string, playlistId: string, songId: string) => {
     try {
-      const userId = auth().currentUser?.uid;
-      if (!userId) {
-        console.log('Người dùng chưa đăng nhập');
+      // Lấy reference đến document của user
+      const playlistRef = firestore().collection('playlists').doc(userId);
+
+      // Lấy dữ liệu của user
+      const userPlaylistsDoc = await playlistRef.get();
+      if (!userPlaylistsDoc.exists) {
+        Alert.alert('Thông báo', 'Người dùng không tồn tại.');
         return;
       }
 
-      const songId = String(song.id);
-      const userfavoriteRef = firestore().collection('favorite').doc(userId);
-      const userfavoriteDoc = await userfavoriteRef.get();
+      const userPlaylists = userPlaylistsDoc.data();
+      const playlistData = userPlaylists?.[playlistId]; // Truy cập playlist theo playlistId
 
-      if (userfavoriteDoc.exists && userfavoriteDoc.data()?.[songId]) {
-        await userfavoriteRef.update({
-          [songId]: firestore.FieldValue.delete(),
-        });
-        console.log('Đã xóa bài hát khỏi thư viện');
-      } else {
-        await userfavoriteRef.set(
-          {
-            [songId]: {
-              id: song.id,
-              name: song.name,
-              artists: song.artists,
-              image: song.image,
-              videoUrl: song.videoUrl,
-            },
-          },
-          { merge: true },
-        );
-        console.log('Đã thêm bài hát vào thư viện');
+      if (!playlistData) {
+        Alert.alert('Thông báo', 'Playlist không tồn tại.');
+        return;
       }
+
+      // Lọc bài hát cần xóa
+      const updatedSongs = playlistData.songs.filter((song: Song) => song.id !== songId);
+
+      // Cập nhật lại danh sách bài hát
+      await playlistRef.update({
+        [`${playlistId}.songs`]: updatedSongs,
+      });
+
+      // Cập nhật lại state
+      setSongs(updatedSongs);
+
+      // Hiển thị thông báo thành công
+      Toast.show({
+        type: 'success',
+        text1: 'Thành công',
+        text2: 'Đã xóa bài hát khỏi playlist.',
+      });
     } catch (error) {
-      console.log('Lỗi khi lưu bài hát:', error);
+      console.error('Lỗi khi xóa bài hát:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Không thể xóa bài hát. Vui lòng thử lại.',
+      });
     }
   };
+
   const renderSong = ({ item }: { item: Song }) => (
-    <TouchableOpacity style={styles.songItem} onPress={() => { navigation.navigate('MusicDetail', { song: item, playlist: songs }) }}>
+    <TouchableOpacity
+      style={styles.songItem}
+      onPress={() => {
+        navigation.navigate('MusicDetail', { song: item, playlist: songs });
+      }}
+    >
       <View style={{ width: 130 }}>
         <Image source={{ uri: item.image }} style={styles.songImage} />
       </View>
       <Space width={16} />
       <View style={styles.songInfo}>
-        <TextComponent text={item.name} numberOfLines={2} styles={[styles.songName, { maxWidth: 180 }]} />
+        <TextComponent
+          text={item.name}
+          numberOfLines={2}
+          styles={[styles.songName, { maxWidth: 180 }]}
+        />
         <TextComponent text={item.artists} styles={styles.songArtist} />
       </View>
-      <TouchableOpacity onPress={() => saveTofavorite(item)}>
-        <Icon name="heart" size={24} color={colors.grey} />
+      <TouchableOpacity
+        onPress={() => {
+          if (userId) {
+            removeSongFromPlaylist(userId, playlist.id, item.id);
+          } else {
+            Alert.alert('Thông báo', 'Bạn cần đăng nhập để thực hiện thao tác này.');
+          }
+        }}
+      >
+        <MaterialIcons name="delete" size={24} color={colors.red} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
-  console.log(playlist);
+
   return (
     <Container style={styles.container} isScroll={false}>
-      <View style={[styles.header, { borderBottomColor: colors.black2, borderBottomWidth: 1, marginBottom: 12 }]}>
-        {playlist.songs.length === 0 ? (<Section styles={{ alignItems: 'center', marginTop: 50 }}>
-          <Feather name="music" size={100} color={colors.lightGray} />
-          <TextComponent
-            text="Không có bài hát trong danh sách"
-            font={fontFamilies.regular}
-            size={18}
-            color={colors.black2}
-            styles={{ marginTop: 10 }}
-          />
-        </Section>) : (<GridImage images={songs.map((song: Song) => song.image)} />)}
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: colors.black2, borderBottomWidth: 1, marginBottom: 12 },
+        ]}
+      >
+        {songs.length === 0 ? (
+          <Section styles={{ alignItems: 'center', marginTop: 50 }}>
+            <Feather name="music" size={100} color={colors.lightGray} />
+            <TextComponent
+              text="Không có bài hát trong danh sách"
+              font={fontFamilies.regular}
+              size={18}
+              color={colors.black2}
+              styles={{ marginTop: 10 }}
+            />
+          </Section>
+        ) : (
+          <GridImage images={songs.map((song: Song) => song.image)} />
+        )}
         <View style={styles.playlistInfo}>
-          <TextComponent size={20} text={playlist.name} numberOfLines={2} styles={styles.playlistName} />
+          <TextComponent
+            size={20}
+            text={playlist.name}
+            numberOfLines={2}
+            styles={styles.playlistName}
+          />
           <TextComponent size={18} text={`${user?.displayName}`} />
           <TextComponent size={18} text={`${songs.length} bài hát`} />
         </View>
@@ -106,23 +150,31 @@ const PlaylistDetail = ({ route, navigation }: any) => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-          }}>
+          }}
+        >
           <TouchableOpacity style={{ alignItems: 'center' }}>
-            <Octicons name='download' size={30} color={colors.black} />
-            <TextComponent text='Tải xuống' />
+            <Octicons name="download" size={30} color={colors.black} />
+            <TextComponent text="Tải xuống" />
           </TouchableOpacity>
           <Space width={30} />
-          <TouchableOpacity style={styles.shuffleButton} onPress={() => {
-            {
-              playlist.songs.length !== 0 ? (navigation.navigate('MusicDetail', { playlist: songs, song: songs[0] })) : (<>
-              </>)
-            }
-          }}>
+          <TouchableOpacity
+            style={styles.shuffleButton}
+            onPress={() => {
+              if (songs.length !== 0) {
+                navigation.navigate('MusicDetail', { playlist: songs, song: songs[0] });
+              }
+            }}
+          >
             <TextComponent text="PHÁT PLAYLIST" styles={styles.shuffleText} />
           </TouchableOpacity>
           <Space width={30} />
-          <TouchableOpacity style={{ alignItems: 'center' }} onPress={() => { navigation.navigate('Add', { playlist: playlist }) }}>
-            <Ionicons name='add-circle-outline' size={30} color={colors.black} />
+          <TouchableOpacity
+            style={{ alignItems: 'center' }}
+            onPress={() => {
+              navigation.navigate('Add', { playlist });
+            }}
+          >
+            <Ionicons name="add-circle-outline" size={30} color={colors.black} />
             <TextComponent text="Thêm" />
           </TouchableOpacity>
         </Section>
@@ -131,37 +183,31 @@ const PlaylistDetail = ({ route, navigation }: any) => {
       <FlatList
         data={songs}
         renderItem={renderSong}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item) => item.id.toString()}
         onEndReachedThreshold={0.1}
         ListFooterComponent={
-          loading ? (
-            <ActivityIndicator size="large" color={colors.black} />
-          ) : null
+          loading ? <ActivityIndicator size="large" color={colors.black} /> : null
         }
       />
-    </Container >
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   header: { alignItems: 'center', padding: 20, paddingBottom: 2 },
-  playlistImage: { width: 200, height: 200, borderRadius: 10 },
   playlistInfo: { alignItems: 'center', marginVertical: 10 },
   playlistName: {
     fontSize: 28,
     fontFamily: fontFamilies.bold,
     color: colors.black,
   },
-  playlistDetails: { fontSize: 14, color: colors.black },
   shuffleButton: {
     backgroundColor: colors.instagram,
     paddingVertical: 10,
     paddingHorizontal: 30,
     borderRadius: 50,
     marginTop: 10,
-    top: -8,
-    left: -5
   },
   shuffleText: {
     color: colors.white,
