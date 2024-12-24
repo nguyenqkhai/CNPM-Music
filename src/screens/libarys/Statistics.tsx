@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
-    FlatList,
     StyleSheet,
-    TouchableOpacity,
+    ScrollView,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -12,145 +11,178 @@ import { colors } from '../../constants/colors';
 import { fontFamilies } from '../../constants/fontFamilies';
 import Container from '../../components/Container';
 import TextComponent from '../../components/TextComponent';
-import { Section } from '@bsdaoquang/rncomponent';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const Statistics = ({ navigation }: any) => {
-    const [listeningHistory, setListeningHistory] = useState([]);
-    const [searchHistory, setSearchHistory] = useState([]);
+type Comment = {
+    id: string;
+    content: string;
+    timestamp: string;
+};
 
-    const fetchStatistics = async () => {
+type RecentlySong = {
+    id: string;
+    name: string;
+    artists: string[];
+    image: string;
+    videoUrl: string;
+    genres: string[];
+};
+
+const Statistics = ({ navigation }: any) => {
+    const [totalListeningTime, setTotalListeningTime] = useState(0);
+    const [mostListenedSong, setMostListenedSong] = useState('');
+    const [userComments, setUserComments] = useState<Comment[]>([]);
+
+    const fetchTotalListeningTime = async () => {
+        console.log("Lưu ý: Thời gian nghe không được lưu trong bảng 'recently list'. Hãy thêm thuộc tính 'duration' nếu cần.");
+        return 0; // Trả về 0 hoặc loại bỏ hoàn toàn nếu không lưu duration.
+    };
+
+    const fetchMostListenedSong = async () => {
         const userId = auth().currentUser?.uid;
         if (userId) {
-            try {
-                const listeningRef = firestore()
-                    .collection('listeningHistory')
-                    .doc(userId);
+            const userRef = firestore().collection('recently list').doc(userId);
+            const snapshot = await userRef.get();
 
-                const listeningDoc = await listeningRef.get();
-                if (listeningDoc.exists) {
-                    setListeningHistory(listeningDoc.data()?.history || []);
-                }
+            if (snapshot.exists) {
+                const recentlyData = snapshot.data() as { [key: string]: RecentlySong };
+                if (!recentlyData) return 'Không có dữ liệu';
 
-                const searchRef = firestore()
-                    .collection('searchHistory')
-                    .doc(userId);
+                // Tạo một đối tượng đếm số lần nghe mỗi bài hát
+                const songCounts: { [key: string]: number } = {};
 
-                const searchDoc = await searchRef.get();
-                if (searchDoc.exists) {
-                    setSearchHistory(searchDoc.data()?.history || []);
-                }
-            } catch (error) {
-                console.log('Error fetching statistics:', error);
+                Object.keys(recentlyData).forEach(songId => {
+                    songCounts[songId] = (songCounts[songId] || 0) + 1;
+                });
+
+                // Xác định bài hát được nghe nhiều nhất
+                const mostListenedSongId = Object.keys(songCounts).reduce((a, b) =>
+                    songCounts[a] > songCounts[b] ? a : b
+                );
+
+                const mostListenedSong = recentlyData[mostListenedSongId];
+                return mostListenedSong?.name || 'Không có dữ liệu';
             }
         }
+        return 'Không có dữ liệu';
+    };
+
+    const fetchUserComments = async () => {
+        const userId = auth().currentUser?.uid;
+        if (userId) {
+            const commentRef = firestore()
+                .collection('comment')
+                .where('userId', '==', userId);
+
+            const snapshot = await commentRef.get();
+            const comments = snapshot.docs.map(doc => ({
+                id: doc.id,
+                content: doc.data().content,
+                timestamp: doc.data().timestamp,
+            }));
+
+            return comments;
+        }
+        return [];
     };
 
     useEffect(() => {
-        fetchStatistics();
+        const fetchData = async () => {
+            const time = await fetchTotalListeningTime();
+            const song = await fetchMostListenedSong();
+            const comments = await fetchUserComments();
+
+            setTotalListeningTime(time);
+            setMostListenedSong(song);
+            setUserComments(comments);
+        };
+
+        fetchData();
     }, []);
-
-    const renderListeningItem = ({ item }: any) => (
-        <View style={styles.historyItem}>
-            <TextComponent
-                text={`Ngày: ${item.date}`}
-                font={fontFamilies.semiBold}
-                size={18}
-            />
-            <TextComponent
-                text={`Thời gian nghe: ${item.duration} phút`}
-                font={fontFamilies.regular}
-                size={16}
-            />
-        </View>
-    );
-
-    const renderSearchItem = ({ item }: any) => (
-        <View style={styles.historyItem}>
-            <TextComponent
-                text={`Tìm kiếm: ${item.query}`}
-                font={fontFamilies.semiBold}
-                size={18}
-            />
-            <TextComponent
-                text={`Thời gian: ${item.timestamp}`}
-                font={fontFamilies.regular}
-                size={16}
-            />
-        </View>
-    );
 
     return (
         <Container isScroll={false} style={{ backgroundColor: colors.white, flex: 1 }}>
-            <Section styles={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: 15,
-                backgroundColor: colors.instagram,
-            }}>
-                <TouchableOpacity style={{
-                    position: 'absolute',
-                    left: 0,
-                    padding: 15,
-                }}
+            {/* Header */}
+            <View style={styles.header}>
+                <Ionicons
+                    name="chevron-back"
+                    size={40}
+                    color={colors.white}
                     onPress={() => navigation.goBack()}
-                >
-                    <Ionicons
-                        name="chevron-back"
-                        size={40}
-                        color={colors.white}
-                    />
-                </TouchableOpacity>
+                />
                 <TextComponent
                     text="Thống kê"
                     font={fontFamilies.bold}
                     size={30}
                     color={colors.white}
+                    styles={{ textAlign: 'center', flex: 1 }}
                 />
-            </Section>
+            </View>
 
-            <TextComponent
-                text="Thời gian nghe nhạc"
-                font={fontFamilies.semiBold}
-                size={20}
-                styles={styles.sectionTitle}
-            />
-            <FlatList
-                data={listeningHistory}
-                keyExtractor={(item, index) => `listening-${index}`}
-                renderItem={renderListeningItem}
-                contentContainerStyle={styles.listContainer}
-            />
+            <ScrollView contentContainerStyle={styles.container}>
+                {/* Tổng thời gian nghe nhạc */}
+                <TextComponent
+                    text={`Tổng thời gian nghe nhạc: ${totalListeningTime} phút`}
+                    font={fontFamilies.semiBold}
+                    size={20}
+                    styles={styles.section}
+                />
 
-            <TextComponent
-                text="Lịch sử tìm kiếm"
-                font={fontFamilies.semiBold}
-                size={20}
-                styles={styles.sectionTitle}
-            />
-            <FlatList
-                data={searchHistory}
-                keyExtractor={(item, index) => `search-${index}`}
-                renderItem={renderSearchItem}
-                contentContainerStyle={styles.listContainer}
-            />
+                {/* Bài hát nghe nhiều nhất */}
+                <TextComponent
+                    text={`Bài hát nghe nhiều nhất: ${mostListenedSong}`}
+                    font={fontFamilies.semiBold}
+                    size={20}
+                    styles={styles.section}
+                />
+
+                {/* Danh sách bình luận */}
+                <TextComponent
+                    text="Danh sách bình luận của bạn:"
+                    font={fontFamilies.semiBold}
+                    size={20}
+                    styles={styles.sectionTitle}
+                />
+                {userComments.map(comment => (
+                    <View key={comment.id} style={styles.commentItem}>
+                        <TextComponent
+                            text={`Nội dung: ${comment.content}`}
+                            font={fontFamilies.regular}
+                            size={16}
+                        />
+                        <TextComponent
+                            text={`Thời gian: ${comment.timestamp}`}
+                            font={fontFamilies.regular}
+                            size={14}
+                        />
+                    </View>
+                ))}
+            </ScrollView>
         </Container>
     );
 };
 
 const styles = StyleSheet.create({
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        backgroundColor: colors.instagram,
+    },
+    container: {
+        padding: 16,
+    },
+    section: {
+        marginVertical: 16,
+    },
     sectionTitle: {
         marginVertical: 16,
     },
-    listContainer: {
-        paddingBottom: 16,
-    },
-    historyItem: {
+    commentItem: {
         padding: 10,
+        marginVertical: 5,
         backgroundColor: colors.grey,
-        marginBottom: 10,
-        borderRadius: 10,
+        borderRadius: 8,
     },
 });
 

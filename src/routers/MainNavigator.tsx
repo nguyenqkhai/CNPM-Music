@@ -35,6 +35,7 @@ const MainNagivator = () => {
       <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
       <Stack.Screen name="PasswordReset" component={PasswordReset} />
       <Stack.Screen name="Songs" component={SongArtist} />
+      {/* <Stack.Screen name="ForgotPassword" component={ForgotPassword} /> */}
     </Stack.Navigator>
   );
 };

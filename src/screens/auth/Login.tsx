@@ -91,7 +91,7 @@ const Login = ({ navigation }: any) => {
           loading={isLoading}
         />
         <Space height={10} />
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => { navigation.navigate('ForgotPassword') }}>
           <TextComponent
             styles={{ textAlign: 'right' }}
             text="Quên mật khẩu"
