@@ -26,6 +26,7 @@ import { Song } from '../../constants/models';
 import firestore from '@react-native-firebase/firestore';
 import { Section, Space } from '@bsdaoquang/rncomponent';
 import { getMusicListByKeyword } from '../../utils/handleAPI';
+import Toast from 'react-native-toast-message';
 
 const MusicList = ({ navigation }: any) => {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -37,12 +38,15 @@ const MusicList = ({ navigation }: any) => {
   useEffect(() => {
     const fetchSongs = async () => {
       setLoading(true);
-      const fetchedSongs = await getMusicListByKeyword('vietnamese vpop');
-
-      if (fetchedSongs && Array.isArray(fetchedSongs)) {
-        const validSongs = fetchedSongs.filter((song) => song.videoUrl);
-        setSongs(validSongs);
-        setDisplayedSongs(validSongs.slice(0, loadCount));
+      try {
+        const fetchedSongs = await getMusicListByKeyword('vietnamese vpop');
+        if (fetchedSongs && Array.isArray(fetchedSongs)) {
+          const validSongs = fetchedSongs.filter((song) => song.videoUrl);
+          setSongs(validSongs);
+          setDisplayedSongs(validSongs.slice(0, loadCount));
+        }
+      } catch (error) {
+        console.log('Lỗi khi lấy danh sách bài hát:', error);
       }
       setLoading(false);
     };
@@ -68,12 +72,12 @@ const MusicList = ({ navigation }: any) => {
 
     fetchSongs();
     fetchFavorites();
-  }, []);
+  }, [loadCount]);
 
   const loadMoreSongs = () => {
     if (loading) return;
     setLoading(true);
-    const newLoadCount = loadCount + 100;
+    const newLoadCount = loadCount + 10;
     setDisplayedSongs(songs.slice(0, newLoadCount));
     setLoadCount(newLoadCount);
     setLoading(false);
@@ -100,7 +104,11 @@ const MusicList = ({ navigation }: any) => {
           updated.delete(songId);
           return updated;
         });
-        console.log('Đã xóa bài hát khỏi thư viện');
+        Toast.show({
+          type: 'info',
+          text1: 'Thông báo',
+          text2: 'Đã xóa bài hát khỏi danh sách yêu thích.',
+        });
       } else {
         await userfavoriteRef.set(
           {
@@ -115,13 +123,22 @@ const MusicList = ({ navigation }: any) => {
           },
           { merge: true },
         );
-        setFavoriteIds((prev) => new Set(prev).add(songId));
-        console.log('Đã thêm bài hát vào thư viện');
+        setFavoriteIds((prev) => {
+          const updated = new Set(prev);
+          updated.add(songId);
+          return updated;
+        });
+        Toast.show({
+          type: 'info',
+          text1: 'Thông báo',
+          text2: 'Đã thêm bài hát vào danh sách yêu thích.',
+        });
       }
     } catch (error) {
       console.log('Lỗi khi lưu bài hát:', error);
     }
   };
+
 
   const saveRecentlyPlayed = async (song: Song) => {
     try {
@@ -132,7 +149,7 @@ const MusicList = ({ navigation }: any) => {
       }
 
       const songId = String(song.id);
-      const userRef = firestore().collection('recently list').doc(userId);
+      const userRef = firestore().collection('recentlyPlayed').doc(userId);
       await userRef.set(
         {
           [songId]: {
@@ -244,12 +261,12 @@ const MusicList = ({ navigation }: any) => {
           />
 
           <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-              <Icon name="search" size={sizes.icon} color={colors.white} />
+            <TouchableOpacity>
+              <FontAwesome name="microphone" size={sizes.icon} color={colors.instagram} />
             </TouchableOpacity>
             <Space width={30} />
-            <TouchableOpacity onPress={() => console.log('mic')}>
-              <FontAwesome name="microphone" size={sizes.icon} color={colors.white} />
+            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+              <Icon name="search" size={sizes.icon} color={colors.white} />
             </TouchableOpacity>
           </View>
         </Section>

@@ -108,7 +108,7 @@ const Favorite = ({ navigation }: any) => {
                     <Ionicons name="chevron-back" size={30} color={colors.white} />
                 </TouchableOpacity>
                 <TextComponent
-                    text="Bài hát tải về"
+                    text="Bài hát yêu thích"
                     font={fontFamilies.bold}
                     size={25}
                     color={colors.white}

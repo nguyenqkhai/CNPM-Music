@@ -1,12 +1,14 @@
 import { Button, Section, Space } from '@bsdaoquang/rncomponent';
 import auth from '@react-native-firebase/auth';
 import { useState } from 'react';
-import { Alert, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../../constants/colors';
 import { fontFamilies } from '../../constants/fontFamilies';
 import Input from '../../components/InputComponent';
 import Container from '../../components/Container'
+import TextComponent from '../../components/TextComponent'
+import { sizes } from '../../constants/sizes';
 const PasswordReset = ({ navigation }: any) => {
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -64,23 +66,32 @@ const PasswordReset = ({ navigation }: any) => {
     };
 
     return (
-        <Container
-            title="Đổi mật khẩu"
-            back={
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="chevron-back" size={24} color={colors.white} />
-                </TouchableOpacity>
-            }
-            style={{ backgroundColor: colors.black }}>
+        <Container>
+            <Section
+                styles={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 15,
+                    backgroundColor: colors.instagram,
+                }}>
+
+                <TextComponent
+                    text="Đổi mật khẩu"
+                    color={colors.white}
+                    font={fontFamilies.bold}
+                    size={sizes.title}
+                />
+            </Section>
             <Space height={40} />
             <Section>
                 <View>
                     <Input
                         labelStyleProps={{
-                            color: colors.white,
+                            color: colors.black,
                             fontFamily: fontFamilies.medium,
                         }}
-                        color={colors.black}
+                        color={colors.white}
                         inputStyles={{ color: colors.grey }}
                         required
                         password
@@ -92,12 +103,12 @@ const PasswordReset = ({ navigation }: any) => {
                     />
                     <Input
                         labelStyleProps={{
-                            color: colors.white,
+                            color: colors.black,
                             fontFamily: fontFamilies.medium,
                         }}
                         required
                         password
-                        color={colors.black}
+                        color={colors.white}
                         inputStyles={{ color: colors.grey }}
                         helpText="Hãy nhập mật khẩu mới"
                         label="Mật khẩu mới"
@@ -107,11 +118,11 @@ const PasswordReset = ({ navigation }: any) => {
                     />
                     <Input
                         labelStyleProps={{
-                            color: colors.white,
+                            color: colors.black,
                             fontFamily: fontFamilies.medium,
                         }}
                         label="Xác nhận mật khẩu"
-                        color={colors.black}
+                        color={colors.white}
                         inputStyles={{ color: colors.grey }}
                         required
                         password

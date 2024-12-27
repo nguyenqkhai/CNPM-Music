@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import Container from '../components/Container';
 import { colors } from '../constants/colors';
@@ -8,6 +8,7 @@ import { Input, Section, Space } from '@bsdaoquang/rncomponent';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import Toast from 'react-native-toast-message';
 
 const CreatePlaylist = ({ navigation }: any) => {
   const [playlistName, setPlaylistName] = useState('');
@@ -15,13 +16,24 @@ const CreatePlaylist = ({ navigation }: any) => {
 
   const handleCreatePlaylist = async () => {
     if (!playlistName.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên playlist.');
+      if (!playlistName.trim()) {
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi',
+          text2: 'Vui lòng nhập tên playlist.',
+        });
+        return;
+      }
       return;
     }
 
     const userId = auth().currentUser?.uid;
     if (!userId) {
-      Alert.alert('Lỗi', 'Bạn chưa đăng nhập');
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Bạn chưa đăng nhập.',
+      })
       return;
     }
 
@@ -41,11 +53,17 @@ const CreatePlaylist = ({ navigation }: any) => {
         },
         { merge: true }
       );
-      Alert.alert('Thành công', 'Playlist đã được tạo!');
-      console.log('Playlist đã được tạo');
+      Toast.show({
+        type: 'success',
+        text1: 'Thành công',
+        text2: 'Playlist đã được tạo.'
+      })
     } catch (error) {
-      console.log('Lỗi khi tạo playlist', error);
-      Alert.alert('Lỗi', 'Không thể tạo playlist. Vui lòng thử lại.');
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Không thể tạo playlist. Vui lòng thử lại.'
+      })
     }
   };
 

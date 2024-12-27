@@ -26,6 +26,7 @@ import { Song } from '../../constants/models';
 import { Section, Space } from '@bsdaoquang/rncomponent';
 import { getMusicListByKeyword } from '../../utils/handleAPI';
 import Container from '../../components/Container';
+import Toast from 'react-native-toast-message';
 
 const SongArtist = ({ route, navigation }: any) => {
     const artist = route.params.artist; // Tên ca sĩ
@@ -100,7 +101,11 @@ const SongArtist = ({ route, navigation }: any) => {
                     { merge: true },
                 );
                 setFavoriteIds((prev) => new Set(prev).add(songId));
-                console.log('Đã thêm bài hát vào thư viện');
+                Toast.show({
+                    type: 'info',
+                    text1: 'Thông báo',
+                    text2: 'Đã thêm bài hát vào thư viện.'
+                })
             }
         } catch (error) {
             console.log('Lỗi khi lưu bài hát:', error);

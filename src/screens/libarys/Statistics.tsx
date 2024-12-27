@@ -1,103 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { colors } from '../../constants/colors';
 import { fontFamilies } from '../../constants/fontFamilies';
 import Container from '../../components/Container';
 import TextComponent from '../../components/TextComponent';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
-type Comment = {
-    id: string;
-    content: string;
-    timestamp: string;
-};
-
-type RecentlySong = {
-    id: string;
-    name: string;
-    artists: string[];
-    image: string;
-    videoUrl: string;
-    genres: string[];
-};
 
 const Statistics = ({ navigation }: any) => {
-    const [totalListeningTime, setTotalListeningTime] = useState(0);
-    const [mostListenedSong, setMostListenedSong] = useState('');
-    const [userComments, setUserComments] = useState<Comment[]>([]);
+    const [comments, setComments] = useState<any[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
 
-    const fetchTotalListeningTime = async () => {
-        console.log("Lưu ý: Thời gian nghe không được lưu trong bảng 'recently list'. Hãy thêm thuộc tính 'duration' nếu cần.");
-        return 0; // Trả về 0 hoặc loại bỏ hoàn toàn nếu không lưu duration.
-    };
+    // Fetching comments from Firestore for the current user
+    const fetchUserComments = async () => {
+        try {
+            const userId = auth().currentUser?.uid;
 
-    const fetchMostListenedSong = async () => {
-        const userId = auth().currentUser?.uid;
-        if (userId) {
-            const userRef = firestore().collection('recently list').doc(userId);
-            const snapshot = await userRef.get();
+            if (userId) {
+                const commentsRef = firestore().collection('comments');
+                const commentsSnapshot = await commentsRef.get();
 
-            if (snapshot.exists) {
-                const recentlyData = snapshot.data() as { [key: string]: RecentlySong };
-                if (!recentlyData) return 'Không có dữ liệu';
+                const userComments: any[] = [];
 
-                // Tạo một đối tượng đếm số lần nghe mỗi bài hát
-                const songCounts: { [key: string]: number } = {};
-
-                Object.keys(recentlyData).forEach(songId => {
-                    songCounts[songId] = (songCounts[songId] || 0) + 1;
+                commentsSnapshot.forEach((doc: any) => {
+                    const data = doc.data();
+                    if (data.comments && Array.isArray(data.comments)) {
+                        // Lọc các bình luận của user từ mảng comments
+                        const userSpecificComments = data.comments.filter(
+                            (comment: any) => comment.userId === userId
+                        );
+                        userComments.push(
+                            ...userSpecificComments.map((comment: any) => ({
+                                ...comment,
+                                name: data.name, // Thêm videoId để hiển thị
+                            }))
+                        );
+                    }
                 });
 
-                // Xác định bài hát được nghe nhiều nhất
-                const mostListenedSongId = Object.keys(songCounts).reduce((a, b) =>
-                    songCounts[a] > songCounts[b] ? a : b
-                );
-
-                const mostListenedSong = recentlyData[mostListenedSongId];
-                return mostListenedSong?.name || 'Không có dữ liệu';
+                setComments(userComments);
+            } else {
+                console.log('No user is currently logged in.');
             }
+        } catch (error) {
+            console.error('Error fetching user comments:', error);
+        } finally {
+            setLoading(false);
         }
-        return 'Không có dữ liệu';
-    };
-
-    const fetchUserComments = async () => {
-        const userId = auth().currentUser?.uid;
-        if (userId) {
-            const commentRef = firestore()
-                .collection('comment')
-                .where('userId', '==', userId);
-
-            const snapshot = await commentRef.get();
-            const comments = snapshot.docs.map(doc => ({
-                id: doc.id,
-                content: doc.data().content,
-                timestamp: doc.data().timestamp,
-            }));
-
-            return comments;
-        }
-        return [];
     };
 
     useEffect(() => {
-        const fetchData = async () => {
-            const time = await fetchTotalListeningTime();
-            const song = await fetchMostListenedSong();
-            const comments = await fetchUserComments();
-
-            setTotalListeningTime(time);
-            setMostListenedSong(song);
-            setUserComments(comments);
-        };
-
-        fetchData();
+        fetchUserComments();
     }, []);
 
     return (
@@ -120,43 +74,36 @@ const Statistics = ({ navigation }: any) => {
             </View>
 
             <ScrollView contentContainerStyle={styles.container}>
-                {/* Tổng thời gian nghe nhạc */}
+                {/* Danh sách bình luận của người dùng */}
                 <TextComponent
-                    text={`Tổng thời gian nghe nhạc: ${totalListeningTime} phút`}
-                    font={fontFamilies.semiBold}
-                    size={20}
-                    styles={styles.section}
-                />
-
-                {/* Bài hát nghe nhiều nhất */}
-                <TextComponent
-                    text={`Bài hát nghe nhiều nhất: ${mostListenedSong}`}
-                    font={fontFamilies.semiBold}
-                    size={20}
-                    styles={styles.section}
-                />
-
-                {/* Danh sách bình luận */}
-                <TextComponent
-                    text="Danh sách bình luận của bạn:"
+                    text="Bình luận của bạn"
                     font={fontFamilies.semiBold}
                     size={20}
                     styles={styles.sectionTitle}
                 />
-                {userComments.map(comment => (
-                    <View key={comment.id} style={styles.commentItem}>
-                        <TextComponent
-                            text={`Nội dung: ${comment.content}`}
-                            font={fontFamilies.regular}
-                            size={16}
-                        />
-                        <TextComponent
-                            text={`Thời gian: ${comment.timestamp}`}
-                            font={fontFamilies.regular}
-                            size={14}
-                        />
-                    </View>
-                ))}
+
+                {loading ? (
+                    <Text style={styles.loadingText}>Đang tải bình luận...</Text>
+                ) : comments.length > 0 ? (
+                    comments.map((comment, index) => (
+                        <View key={index} style={styles.commentCard}>
+                            <Text style={styles.videoTitle}>
+                                Video: {comment.name || 'Không xác định'}
+                            </Text>
+                            {/* Nếu cần lấy tên bài hát từ videoId, gọi hàm fetchSongName */}
+                            <Text style={styles.commentText}>
+                                {comment.comment || 'Nội dung không hợp lệ'}
+                            </Text>
+                            <Text style={styles.commentTimestamp}>
+                                {comment.timestamp?.seconds
+                                    ? new Date(comment.timestamp.seconds * 1000).toLocaleString()
+                                    : 'Thời gian không xác định'}
+                            </Text>
+                        </View>
+                    ))
+                ) : (
+                    <Text style={styles.noComments}>Bạn chưa có bình luận nào</Text>
+                )}
             </ScrollView>
         </Container>
     );
@@ -172,17 +119,45 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
     },
-    section: {
-        marginVertical: 16,
-    },
     sectionTitle: {
         marginVertical: 16,
+        fontSize: 20,
     },
-    commentItem: {
+    commentCard: {
         padding: 10,
-        marginVertical: 5,
         backgroundColor: colors.grey,
         borderRadius: 8,
+        marginBottom: 10,
+    },
+    videoTitle: {
+        fontSize: 14,
+        fontFamily: fontFamilies.semiBold,
+        color: colors.black,
+        marginBottom: 5,
+    },
+    commentText: {
+        fontSize: 16,
+        fontFamily: fontFamilies.regular,
+    },
+    commentTimestamp: {
+        fontSize: 12,
+        fontFamily: fontFamilies.regular,
+        color: colors.black,
+        marginTop: 5,
+    },
+    noComments: {
+        fontSize: 16,
+        fontFamily: fontFamilies.regular,
+        color: colors.black,
+        marginTop: 10,
+        textAlign: 'center',
+    },
+    loadingText: {
+        fontSize: 16,
+        fontFamily: fontFamilies.regular,
+        color: colors.lightGray,
+        textAlign: 'center',
+        marginTop: 20,
     },
 });
 

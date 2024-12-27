@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Image,
@@ -35,10 +35,7 @@ const PlaylistDetail = ({ route, navigation }: any) => {
 
   const removeSongFromPlaylist = async (userId: string, playlistId: string, songId: string) => {
     try {
-      // Lấy reference đến document của user
       const playlistRef = firestore().collection('playlists').doc(userId);
-
-      // Lấy dữ liệu của user
       const userPlaylistsDoc = await playlistRef.get();
       if (!userPlaylistsDoc.exists) {
         Alert.alert('Thông báo', 'Người dùng không tồn tại.');
@@ -46,25 +43,21 @@ const PlaylistDetail = ({ route, navigation }: any) => {
       }
 
       const userPlaylists = userPlaylistsDoc.data();
-      const playlistData = userPlaylists?.[playlistId]; // Truy cập playlist theo playlistId
+      const playlistData = userPlaylists?.[playlistId];
 
       if (!playlistData) {
-        Alert.alert('Thông báo', 'Playlist không tồn tại.');
+        Toast.show({
+          type: 'info',
+          text1: 'Thông báo',
+          text2: 'Playlist không tồn tại.'
+        })
         return;
       }
-
-      // Lọc bài hát cần xóa
       const updatedSongs = playlistData.songs.filter((song: Song) => song.id !== songId);
-
-      // Cập nhật lại danh sách bài hát
       await playlistRef.update({
         [`${playlistId}.songs`]: updatedSongs,
       });
-
-      // Cập nhật lại state
       setSongs(updatedSongs);
-
-      // Hiển thị thông báo thành công
       Toast.show({
         type: 'success',
         text1: 'Thành công',
@@ -104,7 +97,11 @@ const PlaylistDetail = ({ route, navigation }: any) => {
           if (userId) {
             removeSongFromPlaylist(userId, playlist.id, item.id);
           } else {
-            Alert.alert('Thông báo', 'Bạn cần đăng nhập để thực hiện thao tác này.');
+            Toast.show({
+              type: 'info',
+              text1: 'Thông báo',
+              text2: 'Bạn chưa đăng nhập.'
+            })
           }
         }}
       >

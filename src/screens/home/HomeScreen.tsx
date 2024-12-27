@@ -18,47 +18,48 @@ const HomeScreen = ({ navigation }: any) => {
         top100: [],
         kpop: [],
         vpop: [],
+        rap: [],
     });
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [loadingRecommended, setLoadingRecommended] = useState(false);
     const [recommenSong, setRecommenSong] = useState<RecommnededSong[]>([]);
 
     useEffect(() => {
-        // fetchRecommendedSongs();
+        fetchRecommendedSongs();
         fetchData();
     }, []);
     const userIdd = auth().currentUser?.uid;
-
-    // const fetchRecommendedSongs = useCallback(async () => {
-    //     try {
-    //         setLoadingRecommended(true);
-    //         const response = await axios.post('http://192.168.2.8:5000/recommend_songs',
-    //             { userId: userIdd },
-    //             { headers: { 'Content-Type': 'application/json' } }
-    //         );
-    //         setRecommenSong(response.data);
-    //         console.log(recommenSong);
-    //     } catch (error) {
-    //         console.error('Lỗi khi lấy bài hát gợi ý:', error);
-    //     } finally {
-    //         setLoadingRecommended(false);
-    //     }
-    // }, []);
+    const fetchRecommendedSongs = useCallback(async () => {
+        try {
+            setLoadingRecommended(true);
+            const response = await axios.post('http://192.168.2.6:5000/recommend_songs',
+                { userId: userIdd },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+            setRecommenSong(response.data);
+        } catch (error) {
+            console.error('Lỗi khi lấy bài hát gợi ý:', error);
+        } finally {
+            setLoadingRecommended(false);
+        }
+    }, []);
 
 
     const fetchData = useCallback(async () => {
         setLoadingCategories(true);
         try {
-            const [fetchedTop100, fetchedVPop, fetchedKPop] = await Promise.all([
+            const [fetchedTop100, fetchedVPop, fetchedKPop, fetchedRap] = await Promise.all([
                 getMusicListByKeyword('bolero mv'),
                 getMusicListByKeyword('vpop'),
                 getMusicListByKeyword('Kpop'),
+                getMusicListByKeyword('Rap')
             ]);
 
             setCategories({
                 top100: fetchedTop100 || [],
                 vpop: fetchedVPop || [],
                 kpop: fetchedKPop || [],
+                rap: fetchedRap || [],
             });
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -71,7 +72,6 @@ const HomeScreen = ({ navigation }: any) => {
         <TouchableOpacity
             onPress={() => {
                 navigation.navigate('MusicDetail', { song: item, playlist: playlist });
-                console.log(item.genres[0]);
             }}
         >
             <View
@@ -104,7 +104,6 @@ const HomeScreen = ({ navigation }: any) => {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         onPress={() => {
-                            console.log(`Play song: ${item}`);
                             navigation.navigate('MusicDetail', { song: item, playlist: recommenSong });
                         }}
                     >
@@ -113,17 +112,18 @@ const HomeScreen = ({ navigation }: any) => {
                                 flex: 1,
                                 margin: 10,
                                 elevation: 2,
-                                backgroundColor: 'coral',
+                                backgroundColor: colors.white,
                                 borderRadius: 10,
                                 overflow: 'hidden',
-                                width: 200,
+                                paddingBottom: 12,
+                                width: 230,
 
                             }}
                         >
-                            <Image source={{ uri: item.image }} style={{ width: 200, height: 200 }} resizeMode="cover" />
-                            <TextComponent text={item.name} size={15} numberOfLines={1} />
-                            <Space height={8} />
-                            <TextComponent text={item.artists} size={12} color={colors.grey} />
+                            <Image source={{ uri: item.image }} style={{ width: 356, height: 200 }} resizeMode="cover" />
+                            <TextComponent font={fontFamilies.semiBold} text={item.name} size={15} numberOfLines={2} styles={{ paddingHorizontal: 8, paddingTop: 12 }} />
+                            <Space height={4} />
+                            <TextComponent text={item.artists} styles={{ paddingHorizontal: 8 }} size={15} font={fontFamilies.bold} />
                         </View>
                     </TouchableOpacity>
                 )}
@@ -172,10 +172,11 @@ const HomeScreen = ({ navigation }: any) => {
                 </View>
             ) : (
                 <>
-                    {/* {renderRecommendedSongs()} */}
+                    {renderRecommendedSongs()}
                     {renderCategory('Bolero', categories.top100, 'Pop Ballad')}
                     {renderCategory('V-Pop', categories.vpop, 'V-Pop')}
                     {renderCategory('K-Pop', categories.kpop, 'K-Pop')}
+                    {renderCategory('Rap', categories.rap, 'Rap')}
                 </>
             )}
         </Container>
@@ -183,3 +184,4 @@ const HomeScreen = ({ navigation }: any) => {
 };
 
 export default HomeScreen;
+

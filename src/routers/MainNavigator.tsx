@@ -8,7 +8,6 @@ import Favorite from '../screens/favorites/Favorite';
 import CreatePlaylist from '../playlists/CreatePlaylist';
 import AddToPlaylist from '../playlists/AddToPlaylist';
 import PlaylistDetail from '../playlists/PlaylistDetail';
-import MusicScreenDetail from '../screens/musics/MusicScreenDetail';
 import ShowPlaylist from '../playlists/ShowPlaylist';
 import Statistics from '../screens/libarys/Statistics';
 import DownloadList from '../screens/libarys/DownloadList';
@@ -28,7 +27,6 @@ const MainNagivator = () => {
       <Stack.Screen name="Create" component={CreatePlaylist} />
       <Stack.Screen name="PlaylistDetail" component={PlaylistDetail} />
       <Stack.Screen name="Add" component={AddToPlaylist} />
-      <Stack.Screen name="MusicDetailYoutube" component={MusicScreenDetail} />
       <Stack.Screen name="ShowPlaylist" component={ShowPlaylist} />
       <Stack.Screen name="Statistics" component={Statistics} />
       <Stack.Screen name="Download" component={DownloadList} />

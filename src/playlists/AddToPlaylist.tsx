@@ -21,6 +21,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
   const [suggestedSongs, setSuggestedSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);
   const [playlistData, setPlaylistData] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
 
   const fetchSuggestedSongs = useCallback(async () => {
     setLoading(true);
@@ -28,7 +29,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       const items: Song[] = (await getMusicListByKeyword('music')) || [];
       setSuggestedSongs(items);
     } catch (error) {
-      console.error('Error fetching suggested songs:', error);
+      console.error('Lỗi khi lấy bài hát gợi ý:', error);
     } finally {
       setLoading(false);
     }
@@ -40,11 +41,32 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       const items: Song[] = (await getMusicListByKeyword(query)) || [];
       setSearchResults(items);
     } catch (error) {
-      console.error('Error fetching search results:', error);
+      console.error('Lỗi khi lấy kết quả bài hát:', error);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const fetchPlaylists = () => {
+    const userId = auth().currentUser?.uid;
+    if (userId) {
+      try {
+        const playlistRef = firestore().collection('playlists').doc(userId);
+        playlistRef.onSnapshot(doc => {
+          if (doc.exists) {
+            const data = doc.data() || {};
+            const playlists = Object.keys(data).map(playlistId => ({
+              id: playlistId,
+              ...data[playlistId],
+            }));
+            setPlaylists(playlists);
+          }
+        });
+      } catch (error) {
+        console.log('Lỗi khi tải playlist: ', error);
+      }
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -53,7 +75,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       setSearchResults([]);
       fetchSuggestedSongs();
     }
-  }, [searchQuery, fetchSearchResults, fetchSuggestedSongs]);
+  }, [searchQuery, fetchSearchResults, fetchSuggestedSongs, fetchPlaylists]);
 
   useEffect(() => {
     const userId = auth().currentUser?.uid;
@@ -71,7 +93,6 @@ const AddToPlaylist = ({ route, navigation }: any) => {
           setPlaylistData(songs);
         }
       } else {
-        console.warn('Document does not exist');
         setPlaylistData([]);
       }
     });
@@ -88,9 +109,12 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       }
 
       const playlistId = playlist.id;
-      console.log(playlist?.id);
       if (!playlistId) {
-        Alert.alert('Lỗi', 'Playlist không hợp lệ.');
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi',
+          text2: 'Playlist không hợp lệ'
+        })
         return;
       }
 
@@ -99,7 +123,11 @@ const AddToPlaylist = ({ route, navigation }: any) => {
       const userPlaylists = userPlaylistsDoc.data();
 
       if (!userPlaylists || !userPlaylists[playlistId]) {
-        Alert.alert('Lỗi', 'Không tìm thấy playlist.');
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi',
+          text2: 'Không tìm thấy playlist.'
+        })
         return;
       }
 
@@ -132,7 +160,7 @@ const AddToPlaylist = ({ route, navigation }: any) => {
         text2: 'Đã thêm bài hát vào playlist.',
       });
     } catch (error) {
-      console.error('Error adding to playlist:', error);
+      console.error('Lỗi khi thêm bài hát vào playlist:', error);
       Toast.show({
         type: 'error',
         text1: 'Lỗi',

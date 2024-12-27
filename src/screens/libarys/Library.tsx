@@ -21,6 +21,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { Menu, MenuOption, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import { sizes } from '../../constants/sizes';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
 
 const Library = ({ navigation }: any) => {
   const [recently, setRecently] = useState<any[]>([]);
@@ -77,7 +78,11 @@ const Library = ({ navigation }: any) => {
         await playlistRef.update({
           [playlistId]: firestore.FieldValue.delete(),
         });
-        console.log('Đã xóa playlist:', playlistId);
+        Toast.show({
+          type: 'success',
+          text1: 'Thành công',
+          text2: 'Đã xóa playlist.'
+        })
       } catch (error) {
         console.log('Lỗi khi xóa playlist:', error);
       }
@@ -115,17 +120,47 @@ const Library = ({ navigation }: any) => {
   };
 
   const renamePlaylist = async () => {
+    if (newPlaylistName === "") {
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Hãy đặt tên mới cho playlist.',
+      });
+      return;
+    }
     if (userId && selectedPlaylist && newPlaylistName.trim()) {
       try {
         const playlistRef = firestore().collection('playlists').doc(userId);
+        const userPlaylists = await playlistRef.get();
+        const playlistsData = userPlaylists.data();
+        const isDuplicate = Object.values(playlistsData || {}).some(
+          (playlist: any) => playlist.name?.toLowerCase() === newPlaylistName.toLowerCase()
+        );
+
+        if (isDuplicate) {
+          Toast.show({
+            type: 'error',
+            text1: 'Lỗi',
+            text2: 'Tên playlist đã tồn tại. Vui lòng chọn tên khác.',
+          });
+          return;
+        }
         await playlistRef.update({
           [`${selectedPlaylist.id}.name`]: newPlaylistName,
         });
-        console.log('Playlist renamed to:', newPlaylistName);
+        Toast.show({
+          type: 'success',
+          text1: 'Thành công',
+          text2: 'Đã đổi tên playlist.',
+        });
         setRenameModalVisible(false);
         setNewPlaylistName('');
       } catch (error) {
-        console.log('Error renaming playlist:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi',
+          text2: 'Đổi tên playlist thất bại. Vui lòng thử lại.',
+        });
       }
     }
   };
@@ -184,7 +219,7 @@ const Library = ({ navigation }: any) => {
               text="Tải về"
               font={fontFamilies.regular}
             />
-            <TextComponent size={18} text="10" font={fontFamilies.bold} />
+            <TextComponent size={18} text="10" font={fontFamilies.bold} color={colors.white} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Statistics')}>
@@ -194,7 +229,7 @@ const Library = ({ navigation }: any) => {
               text="Thống kê"
               font={fontFamilies.regular}
             />
-            <TextComponent size={18} text="10" font={fontFamilies.bold} />
+            <TextComponent size={18} text="10" font={fontFamilies.bold} color={colors.white} />
           </TouchableOpacity>
         </Row>
       </Section>
@@ -236,7 +271,7 @@ const Library = ({ navigation }: any) => {
                   navigation.navigate('MusicDetail', {
                     song: item,
                     playlist: recently,
-                  }); console.log(item);
+                  });
                 }}>
                 <View
                   style={{
@@ -327,7 +362,6 @@ const Library = ({ navigation }: any) => {
             <TouchableOpacity
               onPress={() => {
                 navigation.navigate('PlaylistDetail', { playlist: item });
-                console.log(item.id);
               }}
               style={{ flexDirection: 'row', padding: 10, alignItems: 'center' }}>
               <View
@@ -385,7 +419,7 @@ const Library = ({ navigation }: any) => {
           onRequestClose={() => setRenameModalVisible(false)}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <TextComponent text="Rename Playlist" font={fontFamilies.bold} size={20} />
+              <TextComponent text="Đổi tên playlist" font={fontFamilies.bold} size={20} />
               <TextInput
                 value={newPlaylistName}
                 onChangeText={setNewPlaylistName}

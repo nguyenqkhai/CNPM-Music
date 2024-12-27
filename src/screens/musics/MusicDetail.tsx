@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import YoutubeIframe from 'react-native-youtube-iframe';
@@ -29,6 +30,9 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
 import { parseTime } from '../../utils/helper';
 import Input from '../../components/InputComponent';
 import Share from 'react-native-share';
+import { PermissionsAndroid } from 'react-native';
+import RNFetchBlob from 'rn-fetch-blob';
+
 
 const MusicDetail = ({ route, navigation }: any) => {
   const { playlist, song } = route.params;
@@ -91,7 +95,7 @@ const MusicDetail = ({ route, navigation }: any) => {
 
     const commentData = {
       user: user?.displayName,
-      userComments: newComment,
+      comment: newComment,
       userId: user?.uid,
       photoUrl: user?.photoURL ?? '',
       timestamp: new Date(),
@@ -128,7 +132,6 @@ const MusicDetail = ({ route, navigation }: any) => {
         text2: 'Xóa bình luận thành công',
       });
     } catch (error) {
-      console.log(error);
       Toast.show({
         type: 'error',
         text1: 'Thông báo',
@@ -136,6 +139,7 @@ const MusicDetail = ({ route, navigation }: any) => {
       });
     }
   };
+
   const resetHideControlsTimer = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -200,11 +204,14 @@ const MusicDetail = ({ route, navigation }: any) => {
           { merge: true }
         );
         setIsFavorite(true);
-        Alert.alert('Thông báo', 'Bài hát đã được thêm vào danh sách yêu thích.');
+        Toast.show({
+          type: 'info',
+          text1: 'Thông báo',
+          text2: 'Bài hát đã được thêm vào danh sách yêu thích.'
+        })
       }
     } catch (error) {
       console.log('Lỗi khi cập nhật danh sách yêu thích:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật danh sách yêu thích. Vui lòng thử lại.');
     }
   };
   const handleShare = async () => {
@@ -218,8 +225,54 @@ const MusicDetail = ({ route, navigation }: any) => {
     try {
       await Share.open(shareOptions);
       console.log('Chia sẻ thành công!');
+      Toast.show({
+        type: 'success',
+        text1: 'Thành công',
+        text2: 'Chia sẻ thành công.'
+      })
     } catch (error: any) {
-      console.log('Share failed with error:', error.message);
+      console.log('Lỗi khi chia sẻ:', error.message);
+    }
+  };
+
+
+  const downloadVideo = async (videoUrl: string) => {
+    if (!videoUrl) {
+      Alert.alert('Lỗi', 'Vui lòng cung cấp URL video hợp lệ!');
+      return;
+    }
+
+    try {
+      const { fs } = RNFetchBlob;
+      const fileName = `${currentSong.name}.mp4`;
+      const filePath = `${fs.dirs.DownloadDir}/${fileName}`;
+
+      const configOptions = {
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          path: filePath,
+          mime: 'video/mp4',
+          description: 'Tải video về',
+        },
+      };
+      const response = await RNFetchBlob.config(configOptions).fetch('GET', videoUrl);
+
+      if (response.path()) {
+        Toast.show({
+          type: 'success',
+          text1: 'Thành công',
+          text2: 'Video đã được tải về.'
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi tải video:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Đã xảy ra lỗi khi tải video. Vui lòng thử lại.'
+      });
     }
   };
 
@@ -249,33 +302,6 @@ const MusicDetail = ({ route, navigation }: any) => {
 
     checkFavoriteStatus();
   }, [currentSong]);
-
-  const download = async () => {
-    try {
-      setIsDownloading(true);
-      const fileUrl = currentSong.videoUrl;
-      const fileName = `${currentSong.name}.mp4`;
-      const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
-
-      const result = await RNFS.downloadFile({
-        fromUrl: fileUrl,
-        toFile: destinationPath,
-      }).promise;
-
-      if (result.statusCode === 200) {
-        console.log('Download successful:', destinationPath);
-        console.log('Tải về thành công!');
-      } else {
-        console.log('Download failed:', result);
-        console.log('Tải về thất bại.');
-      }
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      console.log('Đã xảy ra lỗi khi tải về.');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   return (
     <Container isScroll={false} style={{ backgroundColor: colors.black }}>
@@ -320,7 +346,7 @@ const MusicDetail = ({ route, navigation }: any) => {
             <Image width={50} height={50} source={{ uri: currentSong.image }} style={{ width: 100, height: 100, borderRadius: 200, borderColor: colors.white, borderWidth: 2 }} />
           </TouchableOpacity>
           <View>
-            <TextComponent text={`Ca sĩ: ${currentSong.artists}`} size={sizes.title} font={fontFamilies.bold} color={colors.grey2} />
+            <TextComponent text={`${currentSong.artists}`} size={sizes.title} font={fontFamilies.bold} color={colors.grey2} />
             <TextComponent
               styles={{ maxWidth: 250 }}
               text={
@@ -354,7 +380,7 @@ const MusicDetail = ({ route, navigation }: any) => {
 
           <TouchableOpacity
             style={{ alignItems: 'center' }}
-            onPress={download}
+            onPress={() => { downloadVideo(currentSong.videoUrl) }}
             disabled={isDownloading}
           >
             <Octicons name="download" size={30} color={isDownloading ? colors.grey : colors.white} />
